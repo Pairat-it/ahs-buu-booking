@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, Clock, CreditCard, User, Shield, CheckCircle, 
   XCircle, AlertCircle, Plus, Edit, Trash2, Download, LogOut, 
-  Search, Filter, ChevronRight, Activity, Database, History, RefreshCw, FileText
+  Search, Filter, ChevronRight, Activity, Database, History, RefreshCw
 } from 'lucide-react';
 
-// รายการเครื่องมือเริ่มต้น ( default )
-const defaultEquipments = [
+const initialEquipments = [
   {
     id: "AHS-EQ-001",
     name: "Real-Time PCR System (ABI 7500)",
@@ -15,7 +14,7 @@ const defaultEquipments = [
     rate: 350,
     status: "available",
     image: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&auto=format&fit=crop&q=60",
-    description: "เครื่องวิเคราะห์ปริมาณสารพันธุกรรมเชิง Real-time รองรับการวิเคราะห์ Gene Expression"
+    description: "เครื่องวิเคราะห์ปริมาณสารพันธุกรรมเชิง Real-time รองรับการวิเคราะห์ Gene Expression และ Genotyping"
   },
   {
     id: "AHS-EQ-002",
@@ -25,7 +24,7 @@ const defaultEquipments = [
     rate: 500,
     status: "available",
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&auto=format&fit=crop&q=60",
-    description: "เครื่องแยกและวิเคราะห์เชิงปริมาณของสารละลาย เหมาะสำหรับงานวิจัยยาสมุนไพร"
+    description: "เครื่องแยกและวิเคราะห์เชิงปริมาณของสารละลาย เหมาะสำหรับงานวิจัยยาสมุนไพรและชีวเคมี"
   },
   {
     id: "AHS-EQ-003",
@@ -35,12 +34,11 @@ const defaultEquipments = [
     rate: 200,
     status: "available",
     image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600&auto=format&fit=crop&q=60",
-    description: "เครื่องวัดความเข้มแสง Absorbance, Fluorescence และ Luminescence สำหรับ 96-well plate"
+    description: "เครื่องวัดความเข้มแสง ตัวตรวจจับ Absorbance, Fluorescence และ Luminescence สำหรับ 96-well plate"
   }
 ];
 
-// ประวัติการจองเริ่มต้น
-const defaultBookings = [
+const initialBookings = [
   {
     id: "BK-2026-001",
     equipmentId: "AHS-EQ-001",
@@ -66,62 +64,28 @@ const defaultBookings = [
 ];
 
 export default function App() {
-  // 1. LocalStorage Management
-  const [equipments, setEquipments] = useState(() => {
-    const saved = localStorage.getItem('ahs_buu_equipments');
-    return saved ? JSON.parse(saved) : defaultEquipments;
-  });
-
-  const [bookings, setBookings] = useState(() => {
-    const saved = localStorage.getItem('ahs_buu_bookings');
-    return saved ? JSON.parse(saved) : defaultBookings;
-  });
-
-  const [userProfile, setUserProfile] = useState(() => {
-    const saved = localStorage.getItem('ahs_buu_profile');
-    return saved ? JSON.parse(saved) : {
-      name: "ภัทรพล สหเวชบำรุง",
-      email: "user@buu.ac.th",
-      role: "นิสิต",
-      department: "เทคโนโลยีหัวใจและหลอดเลือด",
-      creditBalance: 47650,
-      totalQuota: 50000
-    };
-  });
-
-  useEffect(() => {
-    localStorage.setItem('ahs_buu_equipments', JSON.stringify(equipments));
-  }, [equipments]);
-
-  useEffect(() => {
-    localStorage.setItem('ahs_buu_bookings', JSON.stringify(bookings));
-  }, [bookings]);
-
-  useEffect(() => {
-    localStorage.setItem('ahs_buu_profile', JSON.stringify(userProfile));
-  }, [userProfile]);
-
-  // System States
   const [activeTab, setActiveTab] = useState('catalog');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   
+  // Data States
+  const [equipments, setEquipments] = useState(initialEquipments);
+  const [bookings, setBookings] = useState(initialBookings);
+  const [userProfile, setUserProfile] = useState({
+    name: "ภัทรพล สหเวชบำรุง",
+    email: "user@buu.ac.th",
+    role: "นิสิต",
+    department: "เทคโนโลยีหัวใจและหลอดเลือด",
+    creditBalance: 47600,
+    totalQuota: 50000
+  });
+
   // Modal Booking State
   const [bookingModalItem, setBookingModalItem] = useState(null);
   const [bookingHours, setBookingHours] = useState(2);
   const [bookingDate, setBookingDate] = useState('2026-03-25');
-
-  // Modal Admin Form Equipment
-  const [showEqModal, setShowEqModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    id: '', name: '', category: 'Molecular Biology', location: '', 
-    rate: 200, status: 'available', image: '', description: ''
-  });
-
-  // Admin Adjustment State
   const [creditAdjAmount, setCreditAdjAmount] = useState(1000);
 
   // Handlers
@@ -136,7 +100,6 @@ export default function App() {
     }
   };
 
-  // ดำเนินการจองเครื่องมือ & ตัดเครดิต
   const handleConfirmBooking = () => {
     if (!bookingModalItem) return;
     const totalCost = bookingModalItem.rate * bookingHours;
@@ -167,7 +130,6 @@ export default function App() {
     alert('ส่งคำขอและตัดวงเงินเครดิตเรียบร้อยแล้ว!');
   };
 
-  // ยกเลิกการจอง & คืนเครดิต
   const handleCancelBooking = (bookingId, cost) => {
     if (window.confirm('คุณต้องการยกเลิกการจองนี้และขอรับเครดิตคืนใช่หรือไม่?')) {
       setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
@@ -178,7 +140,6 @@ export default function App() {
     }
   };
 
-  // Export CSV
   const handleExportCSV = () => {
     const headers = "Booking ID,Equipment Name,User Name,User Email,Date,Time Slot,Cost (THB),Status\n";
     const rows = bookings.map(b => `${b.id},"${b.equipmentName}","${b.userName}",${b.userEmail},${b.date},"${b.timeSlot}",${b.cost},${b.status}`).join("\n");
@@ -189,41 +150,6 @@ export default function App() {
     link.click();
   };
 
-  // จัดการอุปกรณ์ (Admin)
-  const handleOpenEqModal = (item = null) => {
-    if (item) {
-      setEditingItem(item);
-      setFormData(item);
-    } else {
-      setEditingItem(null);
-      setFormData({
-        id: `AHS-EQ-00${equipments.length + 1}`,
-        name: '', category: 'Molecular Biology', location: 'ห้องปฏิบัติการกลาง ชั้น 3',
-        rate: 300, status: 'available',
-        image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&auto=format&fit=crop&q=60',
-        description: ''
-      });
-    }
-    setShowEqModal(true);
-  };
-
-  const handleSaveEquipment = (e) => {
-    e.preventDefault();
-    if (editingItem) {
-      setEquipments(equipments.map(eq => eq.id === editingItem.id ? formData : eq));
-    } else {
-      setEquipments([...equipments, formData]);
-    }
-    setShowEqModal(false);
-  };
-
-  const handleDeleteEquipment = (id) => {
-    if (window.confirm('คุณต้องการลบรายการเครื่องมือนี้ใช่หรือไม่?')) {
-      setEquipments(equipments.filter(eq => eq.id !== id));
-    }
-  };
-
-  // ปรับวงเงิน Admin
   const handleAdjustCredit = (type) => {
     const amount = Number(creditAdjAmount);
     if (type === 'add') {
@@ -256,6 +182,21 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3 bg-slate-800/80 p-2 rounded-xl border border-slate-700">
+            <div className="flex items-center gap-2 mr-2 border-r border-slate-700 pr-3">
+              <span className="text-xs text-slate-400">ทดสอบบัญชี:</span>
+              <button 
+                onClick={() => setUserProfile({...userProfile, role: "นิสิต", name: "ภัทรพล สหเวชบำรุง"})}
+                className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 ${userProfile.role === 'นิสิต' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-700'}`}
+              >
+                <User className="w-3 h-3" /> นิสิต (user@buu.ac.th)
+              </button>
+              <button 
+                onClick={() => setUserProfile({...userProfile, role: "Admin", name: "ผู้ดูแลระบบ Lab"})}
+                className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 ${userProfile.role === 'Admin' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-700'}`}
+              >
+                <Shield className="w-3 h-3" /> Admin (admin@buu.ac.th)
+              </button>
+            </div>
             <img 
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
               alt="Profile" 
@@ -264,7 +205,7 @@ export default function App() {
             <div className="text-sm">
               <div className="font-semibold text-slate-200 flex items-center gap-1.5">
                 {userProfile.name}
-                <span className="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full border border-blue-400/30">
+                <span className="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full border border-amber-400/30">
                   {userProfile.role}
                 </span>
               </div>
@@ -283,16 +224,28 @@ export default function App() {
               <Database className="w-4 h-4" /> แคตตาล็อกเครื่องมือ
             </button>
             <button 
+              onClick={() => setActiveTab('booking')} 
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition ${activeTab === 'booking' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+            >
+              <Plus className="w-4 h-4" /> จองการใช้งาน
+            </button>
+            <button 
+              onClick={() => setActiveTab('calendar')} 
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition ${activeTab === 'calendar' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+            >
+              <Calendar className="w-4 h-4" /> ตารางปฏิทิน
+            </button>
+            <button 
               onClick={() => setActiveTab('history')} 
               className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition ${activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
             >
-              <History className="w-4 h-4" /> ประวัติการจอง ({bookings.length})
+              <History className="w-4 h-4" /> ประวัติการจอง & คืนเครดิต
             </button>
             <button 
               onClick={() => setActiveTab('admin')} 
               className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
             >
-              <Shield className="w-4 h-4" /> ระบบผู้ดูแล (Admin)
+              <Shield className="w-4 h-4" /> แดชบอร์ดสรุป
             </button>
           </div>
         </div>
@@ -301,7 +254,7 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Credit Card Dashboard Widget */}
+        {/* Credit Banner */}
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-md mb-8 border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
@@ -333,15 +286,9 @@ export default function App() {
         {activeTab === 'catalog' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-              <div className="relative flex-1">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="ค้นหาชื่อเครื่องมือ หรือ รหัสเครื่องมือ..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">รายการเครื่องมือวิทยาศาสตร์ขั้นสูง</h2>
+                <p className="text-xs text-slate-500">เลือกเครื่องมือที่ต้องการใช้งานเพื่อจองคิวหรือตรวจสอบอัตราค่าบริการ</p>
               </div>
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-slate-500" />
@@ -363,8 +310,8 @@ export default function App() {
                 <div key={item.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
                   <div className="relative h-48 bg-slate-100">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    <span className={`absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-medium ${item.status === 'available' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
-                      {item.status === 'available' ? 'พร้อมใช้งาน' : 'ปิดปรับปรุง'}
+                    <span className="absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-medium bg-emerald-500 text-white">
+                      พร้อมใช้งาน
                     </span>
                     <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-slate-200 text-xs px-2.5 py-1 rounded-md">
                       {item.id}
@@ -386,11 +333,10 @@ export default function App() {
                         <span className="text-lg font-bold text-slate-800">฿{item.rate} <span className="text-xs font-normal text-slate-500">/ ชม.</span></span>
                       </div>
                       <button 
-                        disabled={item.status !== 'available'}
                         onClick={() => setBookingModalItem(item)}
-                        className={`font-medium text-xs px-4 py-2 rounded-lg transition ${item.status === 'available' ? 'bg-slate-900 text-white hover:bg-amber-500 hover:text-slate-950' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                        className="bg-slate-900 text-white hover:bg-amber-500 hover:text-slate-950 font-medium text-xs px-4 py-2 rounded-lg transition"
                       >
-                        {item.status === 'available' ? 'จองใช้งาน' : 'ไม่พร้อมบริการ'}
+                        จองใช้งาน
                       </button>
                     </div>
                   </div>
@@ -400,11 +346,59 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: History & Cancel */}
+        {/* Tab 2: Booking Wizard */}
+        {activeTab === 'booking' && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm max-w-3xl mx-auto">
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-amber-500" /> ฟอร์มจองการใช้งานเครื่องมือ
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">เลือกเครื่องมือที่ต้องการจอง</label>
+                <select className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50">
+                  {equipments.map(eq => (
+                    <option key={eq.id} value={eq.id}>{eq.name} (฿{eq.rate}/ชม.)</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">วันที่ต้องการใช้งาน</label>
+                  <input type="date" className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" defaultValue="2026-03-25" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">จำนวนชั่วโมง</label>
+                  <select className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50">
+                    <option value="1">1 ชั่วโมง</option>
+                    <option value="2">2 ชั่วโมง</option>
+                    <option value="3">3 ชั่วโมง</option>
+                  </select>
+                </div>
+              </div>
+              <button onClick={() => alert('จำลองส่งคำขอจองเรียบร้อย')} className="w-full bg-amber-500 text-slate-950 font-bold text-sm py-3 rounded-xl hover:bg-amber-400 transition mt-4">
+                ส่งคำขอจองเครื่องมือ
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Calendar */}
+        {activeTab === 'calendar' && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-amber-500" /> ตารางปฏิทินการใช้เครื่องมือประจำเดือน
+            </h2>
+            <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+              📅 ตารางปฏิทินคิวการใช้งานเครื่องมือใน Central Lab แสดงรายการจองย้อนหลังและล่วงหน้า
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: History & Refund */}
         {activeTab === 'history' && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
             <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <History className="w-5 h-5 text-amber-500" /> ประวัติรายการจองเครื่องมือวิทยาศาสตร์
+              <History className="w-5 h-5 text-amber-500" /> ประวัติการจอง & ขอคืนเครดิต
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-600">
@@ -453,14 +447,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 3: Admin Panel */}
+        {/* Tab 5: Admin Panel */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!isAdminLoggedIn ? (
               <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <Shield className="w-12 h-12 text-amber-500 mx-auto mb-3" />
                 <h2 className="text-xl font-bold text-slate-800">เข้าสู่ระบบผู้ดูแล (Admin)</h2>
-                <p className="text-xs text-slate-500 mt-1 mb-6">กรอกรหัสผ่านผู้ดูแลเพื่อเปิดสิทธิ์เต็มรูปแบบ</p>
+                <p className="text-xs text-slate-500 mt-1 mb-6">กรอกรหัสผ่านผู้ดูแลเพื่อทดสอบสิทธิ์ Admin</p>
                 <form onSubmit={handleAdminLogin} className="space-y-4">
                   <input 
                     type="password" 
@@ -476,13 +470,12 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Admin Header & Export */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                   <div>
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-amber-500" /> แผงควบคุมผู้ดูแลระบบ (Admin Control)
+                      <Shield className="w-5 h-5 text-amber-500" /> แดชบอร์ดสรุปผลผู้ดูแลระบบ (Admin Dashboard)
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">จัดการเครื่องมือ ปรับเพิ่ม/ลดวงเงินเครดิต และส่งออกข้อมูลการจอง</p>
+                    <p className="text-xs text-slate-500 mt-1">จัดการวงเงินเครดิต และดึงรายงานสรุปผลการใช้งาน</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button 
@@ -490,12 +483,6 @@ export default function App() {
                       className="bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-500 transition"
                     >
                       <Download className="w-4 h-4" /> ดึงข้อมูล Export CSV
-                    </button>
-                    <button 
-                      onClick={() => handleOpenEqModal()} 
-                      className="bg-amber-500 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-amber-400 transition"
-                    >
-                      <Plus className="w-4 h-4" /> เพิ่มเครื่องมือใหม่
                     </button>
                     <button 
                       onClick={() => setIsAdminLoggedIn(false)} 
@@ -506,7 +493,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Credit Adjustment Box */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="font-bold text-slate-800 text-sm mb-3">🛠️ ปรับแต่งวงเงินเครดิตนิสิต (ทดสอบระบบ)</h3>
                   <div className="flex items-center gap-3">
@@ -522,56 +508,6 @@ export default function App() {
                     <button onClick={() => handleAdjustCredit('deduct')} className="bg-rose-600 text-white text-xs px-4 py-2 rounded-lg font-semibold hover:bg-rose-500">
                       - หักเครดิต (฿{creditAdjAmount})
                     </button>
-                  </div>
-                </div>
-
-                {/* Equipment Management Table */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <div className="p-4 border-b border-slate-100 font-bold text-slate-800 text-sm">
-                    รายการเครื่องมือในระบบ ({equipments.length})
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-50 text-slate-700 font-semibold text-xs uppercase border-b border-slate-200">
-                        <tr>
-                          <th className="px-6 py-4">รูปภาพ & ชื่อเครื่องมือ</th>
-                          <th className="px-6 py-4">หมวดหมู่</th>
-                          <th className="px-6 py-4">อัตราบริการ</th>
-                          <th className="px-6 py-4">สถานะ</th>
-                          <th className="px-6 py-4 text-right">จัดการ</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {equipments.map(item => (
-                          <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                            <td className="px-6 py-4 flex items-center gap-3">
-                              <img src={item.image} alt="" className="w-10 h-10 rounded-lg object-cover bg-slate-100" />
-                              <div>
-                                <div className="font-bold text-slate-800">{item.name}</div>
-                                <div className="text-xs text-slate-400">{item.id}</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs">{item.category}</td>
-                            <td className="px-6 py-4 font-bold text-slate-800">฿{item.rate}/ชม.</td>
-                            <td className="px-6 py-4">
-                              <span className={`text-xs px-2.5 py-1 rounded-full ${item.status === 'available' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                {item.status === 'available' ? 'พร้อมใช้งาน' : 'ปิดปรับปรุง'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button onClick={() => handleOpenEqModal(item)} className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg">
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => handleDeleteEquipment(item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg">
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               </div>
@@ -630,65 +566,6 @@ export default function App() {
                 <button onClick={() => setBookingModalItem(null)} className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100">ยกเลิก</button>
                 <button onClick={handleConfirmBooking} className="px-4 py-2 bg-amber-500 font-bold text-slate-950 rounded-lg text-sm hover:bg-amber-400">ยืนยันการจอง</button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Admin Add/Edit Equipment */}
-        {showEqModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800 mb-4">
-                {editingItem ? 'แก้ไขข้อมูลเครื่องมือ' : 'เพิ่มเครื่องมือวิทยาศาสตร์ใหม่'}
-              </h3>
-              <form onSubmit={handleSaveEquipment} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">รหัสเครื่องมือ</label>
-                  <input type="text" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} required className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">ชื่อเครื่องมือ</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">หมวดหมู่</label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm">
-                      <option value="Molecular Biology">Molecular Biology</option>
-                      <option value="Analytical Chemistry">Analytical Chemistry</option>
-                      <option value="Cell Biology & Immunology">Cell Biology & Immunology</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">ค่าบริการ (บาท/ชม.)</label>
-                    <input type="number" value={formData.rate} onChange={e => setFormData({...formData, rate: Number(e.target.value)})} required className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">สถานที่ตั้ง</label>
-                  <input type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">URL รูปภาพ</label>
-                  <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} required className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">สถานะใช้งาน</label>
-                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm">
-                    <option value="available">พร้อมใช้งาน (Available)</option>
-                    <option value="maintenance">ปิดปรับปรุง (Maintenance)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">รายละเอียดคำอธิบาย</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm"></textarea>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                  <button type="button" onClick={() => setShowEqModal(false)} className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100">ยกเลิก</button>
-                  <button type="submit" className="px-4 py-2 bg-amber-500 font-bold text-slate-950 rounded-lg text-sm hover:bg-amber-400">บันทึกข้อมูล</button>
-                </div>
-              </form>
             </div>
           </div>
         )}
