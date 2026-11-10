@@ -226,7 +226,8 @@ export default function App() {
     e.preventDefault();
     const email = registerForm.email.trim().toLowerCase();
     if (!email.endsWith('@buu.ac.th') && !email.endsWith('@go.buu.ac.th')) {
-      showToast('กรุณาใช้อีเมลมหาวิทยาลัยบูรพา (@buu.ac.th หรือ @go.buu.ac.th)', 'error'); return;
+      showToast('กรุณาใช้อีเมลมหาวิทยาลัยบูรพา (@buu.ac.th หรือ @go.buu.ac.th)', 'error'); 
+      return;
     }
 
     const finalDepartment = registerForm.department === 'หน่วยงานภายนอกคณะ' 
@@ -249,12 +250,26 @@ export default function App() {
       photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(registerForm.displayName)}&background=0284c7&color=fff`,
       creditLimit: initialCredit
     };
+
     try {
-      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveUser', data: newUser }) });
-      setUsersList((prev) => [...prev, newUser]); 
-      setCurrentUser(newUser);
-      showToast(`ลงทะเบียนเป็น [${newUser.userType}] สำเร็จ! ยินดีต้อนรับคุณ ${newUser.displayName}`, 'success');
-    } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
+      const res = await fetch(API_URL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain' }, 
+        body: JSON.stringify({ action: 'saveUser', data: newUser }) 
+      });
+      
+      const json = await res.json();
+      
+      if (json.status === "success") {
+        setUsersList((prev) => [...prev, newUser]); 
+        setCurrentUser(newUser);
+        showToast(`ลงทะเบียนเป็น [${newUser.userType}] สำเร็จ! ยินดีต้อนรับคุณ ${newUser.displayName}`, 'success');
+      } else {
+        showToast(`เกิดข้อผิดพลาดจาก Sheets: ${json.message}`, 'error');
+      }
+    } catch (err) { 
+      showToast(`เกิดข้อผิดพลาดในการเชื่อมต่อ: ${err.message}`, 'error'); 
+    }
   };
 
   const handleVerifyAdminPasscode = (e) => {
