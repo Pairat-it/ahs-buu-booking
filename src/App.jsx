@@ -487,7 +487,28 @@ export default function App() {
     }
   };
 
-  // ADMIN ACTIONS WITH GOOGLE SHEETS SYNC
+  // ADMIN ACTION: ปุ่มสลับสถานะเครื่องมือด่วน (Quick Toggle Status)
+  const handleToggleEquipmentStatus = async (eq) => {
+    const newStatus = eq.status === 'Available' ? 'Maintenance' : 'Available';
+    const updatedEq = { ...eq, status: newStatus };
+
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'saveEquipment', data: updatedEq })
+      });
+
+      setEquipmentList((prev) =>
+        prev.map((item) => (item.id === eq.id ? updatedEq : item))
+      );
+      showToast(`ปรับสถานะ ${eq.name} เป็น "${newStatus === 'Available' ? 'พร้อมใช้งาน' : 'อยู่ระหว่างซ่อม'}" ใน Google Sheets เรียบร้อยแล้ว`, 'success');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการปรับสถานะเครื่องมือ', 'error');
+    }
+  };
+
+  // ADMIN ACTION: บันทึก/แก้ไข เครื่องมือ ลง Google Sheets
   const handleSaveEquipment = async (e) => {
     e.preventDefault();
     const payload = editingEq 
@@ -514,6 +535,7 @@ export default function App() {
     }
   };
 
+  // ADMIN ACTION: บันทึกงานซ่อมบำรุง ลง Google Sheets
   const handleSaveMaintenanceLog = async (e) => {
     e.preventDefault();
     const eq = equipmentList.find((i) => i.id === maintForm.equipmentId);
@@ -546,6 +568,7 @@ export default function App() {
     }
   };
 
+  // ADMIN ACTION: ปรับวงเงินเครดิต + บันทึกประวัติ ลง Google Sheets
   const handleSaveAdjustCredit = async (e) => {
     e.preventDefault();
     if (!creditAdjustUser) return;
@@ -1000,7 +1023,7 @@ export default function App() {
               </div>
             )}
 
-            {/* ADMIN 2: MANAGE EQUIPMENT */}
+            {/* ADMIN 2: MANAGE EQUIPMENT (พร้อมปุ่มสลับสถานะด่วน) */}
             {activeTab === 'admin-eq' && isAdmin && (
               <div className="space-y-6">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
@@ -1011,16 +1034,32 @@ export default function App() {
                 </div>
                 <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
                   <table className="w-full text-left text-xs text-slate-600">
-                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">เครื่องมือ</th><th className="px-6 py-4">สถานที่</th><th className="px-6 py-4 text-right">ค่าบริการ</th><th className="px-6 py-4 text-center">สถานะ</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
+                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">เครื่องมือ</th><th className="px-6 py-4">สถานที่</th><th className="px-6 py-4 text-right">ค่าบริการ</th><th className="px-6 py-4 text-center">สถานะปัจจุบัน</th><th className="px-6 py-4 text-center">สลับสถานะ / แก้ไข</th></tr></thead>
                     <tbody className="divide-y divide-slate-200">
                       {equipmentList.map((eq) => (
                         <tr key={eq.id} className="hover:bg-slate-50">
                           <td className="px-6 py-4 font-bold text-slate-900">{eq.name} <div className="text-[10px] text-slate-400 font-normal">{eq.code}</div></td>
                           <td className="px-6 py-4">{eq.location}</td>
                           <td className="px-6 py-4 text-right font-bold">{formatCurrency(eq.ratePerHour)}/ชม.</td>
-                          <td className="px-6 py-4 text-center"><span className={`px-2.5 py-1 rounded-full font-bold ${eq.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{eq.status}</span></td>
                           <td className="px-6 py-4 text-center">
-                            <button onClick={() => { setEditingEq(eq); setEqForm(eq); setShowAddEqModal(true); }} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"><Edit className="w-4 h-4" /></button>
+                            <span className={`px-2.5 py-1 rounded-full font-bold ${eq.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                              {eq.status === 'Available' ? 'พร้อมใช้งาน' : 'อยู่ระหว่างซ่อม'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-nowrap">
+                            <button 
+                              onClick={() => handleToggleEquipmentStatus(eq)} 
+                              className={`px-3 py-1.5 rounded-xl font-bold text-xs mr-2 transition-all border ${
+                                eq.status === 'Available' 
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-500 hover:text-white' 
+                                  : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white'
+                              }`}
+                            >
+                              {eq.status === 'Available' ? 'ตั้งเป็น: ส่งซ่อม' : 'ตั้งเป็น: พร้อมใช้งาน'}
+                            </button>
+                            <button onClick={() => { setEditingEq(eq); setEqForm(eq); setShowAddEqModal(true); }} className="p-1.5 text-slate-600 hover:bg-slate-200 rounded-lg" title="แก้ไขข้อมูล">
+                              <Edit className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -1148,6 +1187,7 @@ export default function App() {
         </div>
       )}
 
+      {/* ADD / EDIT EQUIPMENT MODAL (เพิ่มตัวเลือกสถานะการใช้งาน) */}
       {showAddEqModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1160,8 +1200,19 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><label className="block text-xs font-bold mb-1">สถานที่ตั้ง *</label><input type="text" required value={eqForm.location} onChange={(e) => setEqForm({ ...eqForm, location: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
-                <div><label className="block text-xs font-bold mb-1">พาธรูปภาพ (เช่น /eq-1.jpg)</label><input type="text" value={eqForm.image} onChange={(e) => setEqForm({ ...eqForm, image: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">สถานะการใช้งาน *</label>
+                  <select 
+                    value={eqForm.status} 
+                    onChange={(e) => setEqForm({ ...eqForm, status: e.target.value })} 
+                    className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold"
+                  >
+                    <option value="Available">พร้อมใช้งาน (Available)</option>
+                    <option value="Maintenance">อยู่ระหว่างซ่อมบำรุง (Maintenance)</option>
+                  </select>
+                </div>
               </div>
+              <div><label className="block text-xs font-bold mb-1">พาธรูปภาพ (เช่น /eq-1.jpg)</label><input type="text" value={eqForm.image} onChange={(e) => setEqForm({ ...eqForm, image: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
               <div><label className="block text-xs font-bold mb-1">คำอธิบายรายละเอียด</label><textarea rows="2" value={eqForm.description} onChange={(e) => setEqForm({ ...eqForm, description: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowAddEqModal(false)} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold shadow">บันทึกลง Google Sheets</button></div>
             </form>
