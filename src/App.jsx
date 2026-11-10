@@ -535,11 +535,14 @@ export default function App() {
     }
   };
 
-  // ADMIN ACTION: บันทึกงานซ่อมบำรุง ลง Google Sheets
+  // ADMIN ACTION 2: บันทึกงานซ่อมบำรุง ลง Google Sheets (พร้อมดักจับ Error)
   const handleSaveMaintenanceLog = async (e) => {
     e.preventDefault();
     const eq = equipmentList.find((i) => i.id === maintForm.equipmentId);
-    if (!eq) return;
+    if (!eq) {
+      showToast('กรุณาเลือกเครื่องมือที่ต้องการส่งซ่อม', 'error');
+      return;
+    }
 
     const newLog = {
       id: `M-${Math.floor(100 + Math.random() * 900)}`,
@@ -553,18 +556,24 @@ export default function App() {
     };
 
     try {
-      await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'saveMaintenanceLog', data: newLog })
       });
 
-      setMaintenanceLogs([newLog, ...maintenanceLogs]);
-      setEquipmentList(prev => prev.map(i => i.id === eq.id ? { ...i, status: 'Maintenance' } : i));
-      showToast('บันทึกประวัติซ่อมบำรุงใน Google Sheets เรียบร้อยแล้ว', 'success');
-      setShowAddMaintModal(false);
+      const json = await res.json();
+
+      if (json.status === "success") {
+        setMaintenanceLogs([newLog, ...maintenanceLogs]);
+        setEquipmentList(prev => prev.map(i => i.id === eq.id ? { ...i, status: 'Maintenance' } : i));
+        showToast('บันทึกประวัติซ่อมบำรุงใน Google Sheets เรียบร้อยแล้ว', 'success');
+        setShowAddMaintModal(false);
+      } else {
+        showToast(`เกิดข้อผิดพลาดจาก Google Sheets: ${json.message}`, 'error');
+      }
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลซ่อมบำรุง', 'error');
+      showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย', 'error');
     }
   };
 
