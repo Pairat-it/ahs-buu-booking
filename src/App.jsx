@@ -39,7 +39,7 @@ import {
 } from 'lucide-react';
 
 // --- GOOGLE APPS SCRIPT API URL ---
-const API_URL = "https://script.google.com/macros/s/AKfycbw9-YvysfOmUUkKGF3izHa2I2jqv2N10S5C3LLQnyuD_6601EA7Tp0VTJRPaCTY0_k/exec";
+const API_URL = "https://script.google.com/macros/library/d/1QEgaajSizjqYQqImwf1zGy9Z9nEySiE7L4EkjGjJBB-akYXpqnqOTf-f/2";
 
 // --- INITIAL FALLBACK DATA (13 รายการเครื่องมือ MS302 & MS408) ---
 const FALLBACK_EQUIPMENT = [
