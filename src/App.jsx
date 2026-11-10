@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 
 // --- GOOGLE APPS SCRIPT API URL ---
-const API_URL = "https://script.google.com/macros/s/AKfycbw9-YvysfOmUUkKGF3izHa2I2jqv2N10S5C3LLQnyuD_6601EA7Tp0VTJRPaCTY0_k/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxOIj6boUazGC6pVCXluS4ft8Ctu_UOv4KZOAEUdclrzftkDPax58fX1c8Rj9aNRps/exec";
 
 // --- INITIAL FALLBACK DATA ---
 const FALLBACK_EQUIPMENT = [
