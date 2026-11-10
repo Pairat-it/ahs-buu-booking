@@ -35,196 +35,30 @@ import {
   Download, 
   PieChart, 
   FileDown, 
-  Phone 
+  Phone,
+  Users,
+  GraduationCap,
+  Briefcase
 } from 'lucide-react';
 
 // --- GOOGLE APPS SCRIPT API URL ---
-const API_URL = "https://script.google.com/macros/s/AKfycbxOIj6boUazGC6pVCXluS4ft8Ctu_UOv4KZOAEUdclrzftkDPax58fX1c8Rj9aNRps/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw9-YvysfOmUUkKGF3izHa2I2jqv2N10S5C3LLQnyuD_6601EA7Tp0VTJRPaCTY0_k/exec";
 
-// --- INITIAL FALLBACK DATA (13 รายการเครื่องมือ MS302 & MS408) ---
+// --- INITIAL FALLBACK DATA ---
 const FALLBACK_EQUIPMENT = [
-  {
-    id: 'eq-1',
-    name: 'Thermal Cycler / PCR (Bio-Rad T100)',
-    category: 'Molecular Biology',
-    code: '6008-0720-1000-001',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 300,
-    status: 'Available',
-    image: '/eq-1.jpg',
-    description: 'เครื่องเพิ่มปริมาณสารพันธุกรรม (S/N: 621-BR-26902 | ตัวแทน: บ.ธีระเทรดดิ้ง)',
-    specifications: 'Bio-Rad T100, S/N: 621-BR-26902',
-    totalHoursUsed: 45,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-2',
-    name: 'NanoDrop Spectrophotometer (Hercuvan)',
-    category: 'Biochemistry & Molecular',
-    code: 'EQ-MS302-002',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 250,
-    status: 'Available',
-    image: '/eq-2.jpg',
-    description: 'Spectrophotometer วัดความเข้มข้น DNA/RNA ปริมาณน้อย (S/N: 183-16285-22030001)',
-    specifications: 'Hercuvan Microvolume Spectrophotometer',
-    totalHoursUsed: 30,
-    maintenanceThresholdHours: 150
-  },
-  {
-    id: 'eq-3',
-    name: 'Real-Time qPCR System (QuantStudio 5)',
-    category: 'Molecular Biology',
-    code: '6008-0146-0100-0001',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 1000,
-    status: 'Available',
-    image: '/eq-3.jpg',
-    description: 'เครื่องเพิ่มปริมาณสารพันธุกรรมแบบ Real-time (S/N: 272-510-143)',
-    specifications: 'Thermo Fisher Scientific QuantStudio 5',
-    totalHoursUsed: 80,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-4',
-    name: 'Freeze Dryer (Labconco)',
-    category: 'Sample Preparation',
-    code: '6408-0127-7000-01',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 500,
-    status: 'Maintenance',
-    image: '/eq-4.jpg',
-    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: 201-205-613-C | อนุมัติซ่อมแล้ว รอเข้าดำเนินการ)',
-    specifications: 'Labconco Freeze Dryer',
-    totalHoursUsed: 190,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-5',
-    name: 'Freeze Dryer (Christ Alpha 2-4 LSC)',
-    category: 'Sample Preparation',
-    code: 'พท.6408-0127-7000-002',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 500,
-    status: 'Available',
-    image: '/eq-5.jpg',
-    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: MTC-27633)',
-    specifications: 'Christ Alpha 2-4 LSC',
-    totalHoursUsed: 60,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-6',
-    name: 'UFLC / HPLC System (Shimadzu)',
-    category: 'Analytical Chemistry',
-    code: '6008-0630-1000-003',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 800,
-    status: 'Available',
-    image: '/eq-6.jpg',
-    description: 'เครื่องวิเคราะห์และแยกสารชนิดเหลวให้บริสุทธิ์',
-    specifications: 'Shimadzu HPLC System',
-    totalHoursUsed: 110,
-    maintenanceThresholdHours: 250
-  },
-  {
-    id: 'eq-7',
-    name: 'FPLC Protein Purification System (GE ÄKTA start)',
-    category: 'Biochemistry & Protein',
-    code: '6008-1060-7000-001',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 750,
-    status: 'Available',
-    image: '/eq-7.jpg',
-    description: 'เครื่องวิเคราะห์และแยกโปรตีนให้บริสุทธิ์ (S/N: 20-703-31)',
-    specifications: 'GE / Cytiva ÄKTA start FPLC System',
-    totalHoursUsed: 75,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-8',
-    name: 'Rotary Evaporator (KNF)',
-    category: 'Sample Extraction',
-    code: 'EQ-MS302-008',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 350,
-    status: 'Available',
-    image: '/eq-8.jpg',
-    description: 'เครื่องระเหยสารสกัด (S/N: KNF-1563-0324)',
-    specifications: 'KNF Rotary Evaporator System',
-    totalHoursUsed: 40,
-    maintenanceThresholdHours: 150
-  },
-  {
-    id: 'eq-9',
-    name: 'Centrifuge (Eppendorf)',
-    category: 'General Lab Equipment',
-    code: '6008-0631-3000-005',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 200,
-    status: 'Available',
-    image: '/eq-9.jpg',
-    description: 'เครื่องปั่นเหวี่ยงตกตะกอนสาร (S/N: 5811-FN-079185)',
-    specifications: 'Eppendorf Centrifuge 5810/5810 R',
-    totalHoursUsed: 95,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-10',
-    name: 'Microplate Reader (PerkinElmer)',
-    category: 'Immunology & Assay',
-    code: 'EQ-MS302-010',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 400,
-    status: 'Available',
-    image: '/eq-10.jpg',
-    description: 'เครื่องวัดปริมาณสารทางด้านภูมิคุ้มกันวิทยา (S/N: 3400-5-2203-171)',
-    specifications: 'PerkinElmer Microplate Reader',
-    totalHoursUsed: 50,
-    maintenanceThresholdHours: 150
-  },
-  {
-    id: 'eq-11',
-    name: 'ChemiDoc Gel Imaging System (Bio-Rad)',
-    category: 'Molecular & Gel Imaging',
-    code: '6008-0124-0000-02',
-    location: 'ห้องปฏิบัติการ MS302',
-    ratePerHour: 450,
-    status: 'Available',
-    image: '/eq-11.jpg',
-    description: 'เครื่องถ่ายภาพเจลและบันทึกผลการทดลอง (S/N: T32-BR-1944)',
-    specifications: 'Bio-Rad ChemiDoc Gel Imaging System',
-    totalHoursUsed: 85,
-    maintenanceThresholdHours: 200
-  },
-  {
-    id: 'eq-12',
-    name: 'ห้องปฏิบัติการเพาะเลี้ยงเซลล์ MS302/1',
-    category: 'Laboratory Room',
-    code: 'ROOM-MS302/1',
-    location: 'ห้องปฏิบัติการ MS302/1',
-    ratePerHour: 500,
-    status: 'Available',
-    image: '/eq-12.jpg',
-    description: 'ห้องปฏิบัติการเพาะเลี้ยงเซลล์ พร้อมตู้ชีวอนามัยและอุปกรณ์มาตรฐาน',
-    specifications: 'Cell Culture Facility MS302/1',
-    totalHoursUsed: 120,
-    maintenanceThresholdHours: 500
-  },
-  {
-    id: 'eq-13',
-    name: 'ห้องปฏิบัติการจุลชีววิทยาทางการแพทย์ MS408',
-    category: 'Laboratory Room',
-    code: 'ROOM-MS408',
-    location: 'ห้องปฏิบัติการ MS408 ชั้น 4',
-    ratePerHour: 500,
-    status: 'Available',
-    image: '/eq-13.jpg',
-    description: 'ห้องปฏิบัติการเพาะเลี้ยงและทดสอบจุลชีพทางการแพทย์',
-    specifications: 'Medical Microbiology Laboratory MS408 Facility',
-    totalHoursUsed: 140,
-    maintenanceThresholdHours: 500
-  }
+  { id: 'eq-1', name: 'Thermal Cycler / PCR (Bio-Rad T100)', category: 'Molecular Biology', code: '6008-0720-1000-001', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 300, status: 'Available', image: '/eq-1.jpg', description: 'เครื่องเพิ่มปริมาณสารพันธุกรรม (S/N: 621-BR-26902)', specifications: 'Bio-Rad T100, S/N: 621-BR-26902', totalHoursUsed: 45, maintenanceThresholdHours: 200 },
+  { id: 'eq-2', name: 'NanoDrop Spectrophotometer (Hercuvan)', category: 'Biochemistry & Molecular', code: 'EQ-MS302-002', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 250, status: 'Available', image: '/eq-2.jpg', description: 'Spectrophotometer วัดความเข้มข้น DNA/RNA ปริมาณน้อย', specifications: 'Hercuvan Microvolume Spectrophotometer', totalHoursUsed: 30, maintenanceThresholdHours: 150 },
+  { id: 'eq-3', name: 'Real-Time qPCR System (QuantStudio 5)', category: 'Molecular Biology', code: '6008-0146-0100-0001', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 1000, status: 'Available', image: '/eq-3.jpg', description: 'เครื่องเพิ่มปริมาณสารพันธุกรรมแบบ Real-time', specifications: 'Thermo Fisher QuantStudio 5', totalHoursUsed: 80, maintenanceThresholdHours: 200 },
+  { id: 'eq-4', name: 'Freeze Dryer (Labconco)', category: 'Sample Preparation', code: '6408-0127-7000-01', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 500, status: 'Maintenance', image: '/eq-4.jpg', description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ', specifications: 'Labconco Freeze Dryer', totalHoursUsed: 190, maintenanceThresholdHours: 200 },
+  { id: 'eq-5', name: 'Freeze Dryer (Christ Alpha 2-4 LSC)', category: 'Sample Preparation', code: 'พท.6408-0127-7000-002', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 500, status: 'Available', image: '/eq-5.jpg', description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ', specifications: 'Christ Alpha 2-4 LSC', totalHoursUsed: 60, maintenanceThresholdHours: 200 },
+  { id: 'eq-6', name: 'UFLC / HPLC System (Shimadzu)', category: 'Analytical Chemistry', code: '6008-0630-1000-003', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 800, status: 'Available', image: '/eq-6.jpg', description: 'เครื่องวิเคราะห์และแยกสารชนิดเหลวให้บริสุทธิ์', specifications: 'Shimadzu HPLC System', totalHoursUsed: 110, maintenanceThresholdHours: 250 },
+  { id: 'eq-7', name: 'FPLC Protein Purification System (GE ÄKTA start)', category: 'Biochemistry & Protein', code: '6008-1060-7000-001', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 750, status: 'Available', image: '/eq-7.jpg', description: 'เครื่องวิเคราะห์และแยกโปรตีนให้บริสุทธิ์', specifications: 'GE ÄKTA start FPLC System', totalHoursUsed: 75, maintenanceThresholdHours: 200 },
+  { id: 'eq-8', name: 'Rotary Evaporator (KNF)', category: 'Sample Extraction', code: 'EQ-MS302-008', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 350, status: 'Available', image: '/eq-8.jpg', description: 'เครื่องระเหยสารสกัด', specifications: 'KNF Rotary Evaporator System', totalHoursUsed: 40, maintenanceThresholdHours: 150 },
+  { id: 'eq-9', name: 'Centrifuge (Eppendorf)', category: 'General Lab Equipment', code: '6008-0631-3000-005', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 200, status: 'Available', image: '/eq-9.jpg', description: 'เครื่องปั่นเหวี่ยงตกตะกอนสาร', specifications: 'Eppendorf Centrifuge 5810/5810 R', totalHoursUsed: 95, maintenanceThresholdHours: 200 },
+  { id: 'eq-10', name: 'Microplate Reader (PerkinElmer)', category: 'Immunology & Assay', code: 'EQ-MS302-010', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 400, status: 'Available', image: '/eq-10.jpg', description: 'เครื่องวัดปริมาณสารทางด้านภูมิคุ้มกันวิทยา', specifications: 'PerkinElmer Microplate Reader', totalHoursUsed: 50, maintenanceThresholdHours: 150 },
+  { id: 'eq-11', name: 'ChemiDoc Gel Imaging System (Bio-Rad)', category: 'Molecular & Gel Imaging', code: '6008-0124-0000-02', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 450, status: 'Available', image: '/eq-11.jpg', description: 'เครื่องถ่ายภาพเจลและบันทึกผลการทดลอง', specifications: 'Bio-Rad ChemiDoc System', totalHoursUsed: 85, maintenanceThresholdHours: 200 },
+  { id: 'eq-12', name: 'ห้องปฏิบัติการเพาะเลี้ยงเซลล์ MS302/1', category: 'Laboratory Room', code: 'ROOM-MS302/1', location: 'ห้องปฏิบัติการ MS302/1', ratePerHour: 500, status: 'Available', image: '/eq-12.jpg', description: 'ห้องปฏิบัติการเพาะเลี้ยงเซลล์', specifications: 'Cell Culture Facility MS302/1', totalHoursUsed: 120, maintenanceThresholdHours: 500 },
+  { id: 'eq-13', name: 'ห้องปฏิบัติการจุลชีววิทยาทางการแพทย์ MS408', category: 'Laboratory Room', code: 'ROOM-MS408', location: 'ห้องปฏิบัติการ MS408 ชั้น 4', ratePerHour: 500, status: 'Available', image: '/eq-13.jpg', description: 'ห้องปฏิบัติการเพาะเลี้ยงและทดสอบจุลชีพทางการแพทย์', specifications: 'Microbiology Lab MS408 Facility', totalHoursUsed: 140, maintenanceThresholdHours: 500 }
 ];
 
 const formatThaiDate = (dateString) => {
@@ -238,7 +72,6 @@ const formatCurrency = (amount) => {
 };
 
 export default function App() {
-  // --- STATES ---
   const [currentUser, setCurrentUser] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [equipmentList, setEquipmentList] = useState(FALLBACK_EQUIPMENT);
@@ -247,12 +80,11 @@ export default function App() {
   const [creditLogs, setCreditLogs] = useState([]);
 
   const [activeTab, setActiveTab] = useState('catalog');
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
-  // Modals
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [adminAuthError, setAdminAuthError] = useState('');
@@ -267,36 +99,31 @@ export default function App() {
   const [showAddMaintModal, setShowAddMaintModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
 
-  // Forms
-  const [profileForm, setProfileForm] = useState({
-    displayName: '', email: '', phone: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์'
+  const [profileForm, setProfileForm] = useState({ displayName: '', email: '', phone: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์' });
+  
+  // ฟอร์มลงทะเบียนพร้อมรายการภาควิชา/สาขาวิชาทั้ง 9 ตัวเลือก
+  const [registerForm, setRegisterForm] = useState({ 
+    displayName: '', 
+    email: '', 
+    phone: '', 
+    studentId: '', 
+    userType: 'นิสิต', 
+    department: 'สาขาวิทยาศาสตร์การแพทย์', 
+    customDepartment: '',
+    affiliationType: 'ภายในคณะสหเวชศาสตร์' 
   });
+  
+  const [bookingForm, setBookingForm] = useState({ equipmentId: '', date: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '11:00', purpose: '' });
+  const [eqForm, setEqForm] = useState({ name: '', category: 'Molecular Biology', code: '', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 300, status: 'Available', image: '/eq-1.jpg', description: '', specifications: '', maintenanceThresholdHours: 200 });
+  const [maintForm, setMaintForm] = useState({ equipmentId: '', type: 'Preventive Maintenance', technician: '', cost: '', details: '' });
 
-  const [registerForm, setRegisterForm] = useState({
-    displayName: '', email: '', phone: '', studentId: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์'
-  });
-
-  const [bookingForm, setBookingForm] = useState({
-    equipmentId: '', date: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '11:00', purpose: ''
-  });
-
-  const [eqForm, setEqForm] = useState({
-    name: '', category: 'Molecular Biology', code: '', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 300, status: 'Available', image: '/eq-1.jpg', description: '', specifications: '', maintenanceThresholdHours: 200
-  });
-
-  const [maintForm, setMaintForm] = useState({
-    equipmentId: '', type: 'Preventive Maintenance', technician: '', cost: '', details: ''
-  });
-
-  // Filters
   const [calendarFilterEq, setCalendarFilterEq] = useState('ALL');
 
   const showToast = (message, type = 'success') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
+    setTimeout(() => setNotification(null), 5000);
   };
 
-  // --- ดึงข้อมูล REAL-TIME จาก GOOGLE SHEETS ---
   const fetchLiveData = async () => {
     setIsLoading(true);
     try {
@@ -320,7 +147,6 @@ export default function App() {
     fetchLiveData();
   }, []);
 
-  // Remaining Credit Calculation
   const remainingCredit = useMemo(() => {
     if (!currentUser) return 0;
     const userUpcomingBookings = bookings.filter((b) => b.userId === currentUser.uid && b.status === 'Upcoming');
@@ -328,7 +154,9 @@ export default function App() {
     return Math.max(0, (Number(currentUser.creditLimit) || 50000) - usedCost);
   }, [currentUser, bookings]);
 
-  // Calculated Booking Details
+  const studentCount = useMemo(() => usersList.filter(u => u.userType === 'นิสิต').length, [usersList]);
+  const staffCount = useMemo(() => usersList.filter(u => u.userType === 'บุคลากร' || u.userType === 'อาจารย์').length, [usersList]);
+
   const calculatedBookingDetails = useMemo(() => {
     const eq = equipmentList.find((item) => item.id === bookingForm.equipmentId);
     if (!eq || !bookingForm.startTime || !bookingForm.endTime) return { hours: 0, totalCost: 0, valid: false };
@@ -339,21 +167,12 @@ export default function App() {
     return { hours, totalCost: hours * (Number(eq.ratePerHour) || 0), valid: true };
   }, [bookingForm, equipmentList]);
 
-  // Analytics Computation
   const equipmentUsageAnalytics = useMemo(() => {
     return equipmentList.map(eq => {
       const eqBookings = bookings.filter(b => b.equipmentId === eq.id && b.status === 'Upcoming');
       const totalHours = eqBookings.reduce((sum, b) => sum + (Number(b.durationHours) || 0), 0) + (Number(eq.totalHoursUsed) || 0);
       const totalRevenue = eqBookings.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
-      return {
-        id: eq.id,
-        name: eq.name,
-        code: eq.code,
-        totalHours,
-        totalRevenue,
-        threshold: Number(eq.maintenanceThresholdHours) || 200,
-        bookingCount: eqBookings.length
-      };
+      return { id: eq.id, name: eq.name, code: eq.code, totalHours, totalRevenue, threshold: Number(eq.maintenanceThresholdHours) || 200, bookingCount: eqBookings.length };
     });
   }, [equipmentList, bookings]);
 
@@ -370,64 +189,36 @@ export default function App() {
 
   const isAdmin = currentUser?.role === 'Admin';
 
-  // Export CSV Handlers
   const handleExportCSV = () => {
-    if (bookings.length === 0) {
-      showToast('ไม่มีข้อมูลการใช้งานที่จะส่งออก', 'warning');
-      return;
-    }
+    if (bookings.length === 0) { showToast('ไม่มีข้อมูลการใช้งานที่จะส่งออก', 'warning'); return; }
     const headers = ['Booking ID', 'Equipment Name', 'User Name', 'Date', 'Start Time', 'End Time', 'Hours', 'Cost (THB)', 'Purpose', 'Status'];
-    const rows = bookings.map(b => [
-      b.id, `"${b.equipmentName}"`, `"${b.userName}"`, b.date, b.startTime, b.endTime, b.durationHours, b.totalCost, `"${b.purpose || ''}"`, b.status
-    ]);
+    const rows = bookings.map(b => [b.id, `"${b.equipmentName}"`, `"${b.userName}"`, b.date, b.startTime, b.endTime, b.durationHours, b.totalCost, `"${b.purpose || ''}"`, b.status]);
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `AHS_Equipment_Usage_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement('a'); link.setAttribute('href', encodeURI(csvContent)); link.setAttribute('download', `AHS_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
     showToast('ดาวน์โหลดรายงาน CSV เรียบร้อยแล้ว', 'success');
   };
 
   const handleExportUsersCSV = () => {
-    if (usersList.length === 0) {
-      showToast('ไม่มีข้อมูลผู้ใช้งานที่จะส่งออก', 'warning');
-      return;
-    }
+    if (usersList.length === 0) { showToast('ไม่มีข้อมูลผู้ใช้งานที่จะส่งออก', 'warning'); return; }
     const headers = ['UID / StudentID', 'Name', 'Email', 'Phone', 'User Type', 'Department', 'Credit Limit (THB)', 'Status'];
-    const rows = usersList.map(u => [
-      `"${u.studentId || u.uid}"`, `"${u.displayName}"`, `"${u.email}"`, `"${u.phone || '-'}"`, `"${u.userType || 'นิสิต'}"`, `"${u.department || ''}"`, u.creditLimit, u.isBanned ? 'Banned' : 'Active'
-    ]);
+    const rows = usersList.map(u => [`"${u.studentId || u.uid}"`, `"${u.displayName}"`, `"${u.email}"`, `"${u.phone || '-'}"`, `"${u.userType || 'นิสิต'}"`, `"${u.department || ''}"`, u.creditLimit, u.isBanned ? 'Banned' : 'Active']);
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `AHS_Users_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement('a'); link.setAttribute('href', encodeURI(csvContent)); link.setAttribute('download', `AHS_Users_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
     showToast('ดาวน์โหลดรายชื่อผู้ใช้ CSV เรียบร้อยแล้ว', 'success');
   };
 
-  // AUTHENTICATION HANDLERS
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     const emailInput = loginEmail.trim().toLowerCase();
     const foundUser = usersList.find((u) => u.email.trim().toLowerCase() === emailInput);
-
     if (foundUser) {
-      if (foundUser.isBanned) {
-        showToast('บัญชีนี้ถูกระงับสิทธิ์การใช้งาน กรุณาติดต่อผู้ดูแลระบบ', 'error');
-        return;
-      }
-      setCurrentUser(foundUser);
-      showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${foundUser.displayName}`, 'success');
+      if (foundUser.isBanned) { showToast('บัญชีนี้ถูกระงับสิทธิ์การใช้งาน', 'error'); return; }
+      setCurrentUser(foundUser); showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${foundUser.displayName}`, 'success');
     } else {
       showToast('ไม่พบข้อมูลอีเมลนี้ในระบบ กรุณาลงทะเบียนใช้งานครั้งแรก', 'warning');
-      setAuthMode('register');
-      setRegisterForm((prev) => ({ ...prev, email: loginEmail }));
+      setAuthMode('register'); setRegisterForm((prev) => ({ ...prev, email: loginEmail }));
     }
   };
 
@@ -435,114 +226,74 @@ export default function App() {
     e.preventDefault();
     const email = registerForm.email.trim().toLowerCase();
     if (!email.endsWith('@buu.ac.th') && !email.endsWith('@go.buu.ac.th')) {
-      showToast('กรุณาใช้อีเมลมหาวิทยาลัยบูรพา (@buu.ac.th หรือ @go.buu.ac.th)', 'error');
-      return;
+      showToast('กรุณาใช้อีเมลมหาวิทยาลัยบูรพา (@buu.ac.th หรือ @go.buu.ac.th)', 'error'); return;
     }
+
+    const finalDepartment = registerForm.department === 'หน่วยงานภายนอกคณะ' 
+      ? `หน่วยงานภายนอก: ${registerForm.customDepartment || 'ไม่ระบุ'}` 
+      : registerForm.department;
+
+    const initialCredit = registerForm.userType === 'บุคลากร' ? 100000 : 50000;
 
     const newUser = {
-      uid: `usr-${Date.now()}`,
-      displayName: registerForm.displayName,
-      email: email,
+      uid: `usr-${Date.now()}`, 
+      displayName: registerForm.displayName, 
+      email: email, 
       phone: registerForm.phone,
-      studentId: registerForm.studentId,
-      userType: registerForm.userType,
-      department: registerForm.department,
-      affiliationType: registerForm.affiliationType,
-      role: 'User',
+      studentId: registerForm.studentId, 
+      userType: registerForm.userType, 
+      department: finalDepartment,
+      affiliationType: registerForm.department === 'หน่วยงานภายนอกคณะ' ? 'ภายนอกคณะสหเวชศาสตร์' : 'ภายในคณะสหเวชศาสตร์', 
+      role: 'User', 
       isBanned: false,
       photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(registerForm.displayName)}&background=0284c7&color=fff`,
-      creditLimit: registerForm.userType === 'อาจารย์' ? 65000 : 50000
+      creditLimit: initialCredit
     };
-
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveUser', data: newUser })
-      });
-      setUsersList((prev) => [...prev, newUser]);
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveUser', data: newUser }) });
+      setUsersList((prev) => [...prev, newUser]); 
       setCurrentUser(newUser);
-      showToast(`ลงทะเบียนสำเร็จ! ยินดีต้อนรับคุณ ${newUser.displayName}`, 'success');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-    }
+      showToast(`ลงทะเบียนเป็น [${newUser.userType}] สำเร็จ! ยินดีต้อนรับคุณ ${newUser.displayName}`, 'success');
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   };
 
   const handleVerifyAdminPasscode = (e) => {
     e.preventDefault();
     if (adminPasscode === 'admin123') {
       const adminUser = usersList.find(u => u.role === 'Admin') || {
-        uid: 'admin-001',
-        displayName: 'ดร.สมศักดิ์ (Admin)',
-        email: 'admin@buu.ac.th',
-        role: 'Admin',
-        creditLimit: 100000,
+        uid: 'admin-001', displayName: 'ดร.สมศักดิ์ (Admin)', email: 'admin@buu.ac.th', role: 'Admin', creditLimit: 100000,
         photoURL: 'https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff'
       };
-      setCurrentUser(adminUser);
-      setShowAdminAuthModal(false);
+      setCurrentUser(adminUser); setShowAdminAuthModal(false);
       showToast('เข้าสู่ระบบผู้ดูแลระบบ (Admin) เรียบร้อยแล้ว', 'success');
-    } else {
-      setAdminAuthError('รหัสผ่าน Admin ไม่ถูกต้อง');
-    }
+    } else { setAdminAuthError('รหัสผ่าน Admin ไม่ถูกต้อง'); }
   };
 
-  // ADMIN ACTION: ปุ่มสลับสถานะเครื่องมือด่วน (Quick Toggle Status)
   const handleToggleEquipmentStatus = async (eq) => {
     const newStatus = eq.status === 'Available' ? 'Maintenance' : 'Available';
     const updatedEq = { ...eq, status: newStatus };
-
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveEquipment', data: updatedEq })
-      });
-
-      setEquipmentList((prev) =>
-        prev.map((item) => (item.id === eq.id ? updatedEq : item))
-      );
-      showToast(`ปรับสถานะ ${eq.name} เป็น "${newStatus === 'Available' ? 'พร้อมใช้งาน' : 'อยู่ระหว่างซ่อม'}" ใน Google Sheets เรียบร้อยแล้ว`, 'success');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการปรับสถานะเครื่องมือ', 'error');
-    }
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveEquipment', data: updatedEq }) });
+      setEquipmentList((prev) => prev.map((item) => (item.id === eq.id ? updatedEq : item)));
+      showToast(`ปรับสถานะ ${eq.name} เป็น "${newStatus === 'Available' ? 'พร้อมใช้งาน' : 'อยู่ระหว่างซ่อม'}" เรียบร้อยแล้ว`, 'success');
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการปรับสถานะเครื่องมือ', 'error'); }
   };
 
-  // ADMIN ACTION: บันทึก/แก้ไข เครื่องมือ ลง Google Sheets
   const handleSaveEquipment = async (e) => {
     e.preventDefault();
-    const payload = editingEq 
-      ? { ...editingEq, ...eqForm }
-      : { id: `eq-${Date.now()}`, ...eqForm, totalHoursUsed: 0 };
-
+    const payload = editingEq ? { ...editingEq, ...eqForm } : { id: `eq-${Date.now()}`, ...eqForm, totalHoursUsed: 0 };
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveEquipment', data: payload })
-      });
-      
-      if (editingEq) {
-        setEquipmentList(prev => prev.map(item => item.id === payload.id ? payload : item));
-        showToast('แก้ไขข้อมูลเครื่องมือใน Google Sheets เรียบร้อยแล้ว', 'success');
-      } else {
-        setEquipmentList(prev => [...prev, payload]);
-        showToast('เพิ่มเครื่องมือใหม่ลง Google Sheets เรียบร้อยแล้ว', 'success');
-      }
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveEquipment', data: payload }) });
+      if (editingEq) { setEquipmentList(prev => prev.map(item => item.id === payload.id ? payload : item)); showToast('แก้ไขข้อมูลเครื่องมือเรียบร้อยแล้ว', 'success'); }
+      else { setEquipmentList(prev => [...prev, payload]); showToast('เพิ่มเครื่องมือใหม่เรียบร้อยแล้ว', 'success'); }
       setShowAddEqModal(false);
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกเครื่องมือลง Google Sheets', 'error');
-    }
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกเครื่องมือ', 'error'); }
   };
 
-  // ADMIN ACTION 2: บันทึกงานซ่อมบำรุง ลง Google Sheets (พร้อมดักจับ Error)
   const handleSaveMaintenanceLog = async (e) => {
     e.preventDefault();
     const eq = equipmentList.find((i) => i.id === maintForm.equipmentId);
-    if (!eq) {
-      showToast('กรุณาเลือกเครื่องมือที่ต้องการส่งซ่อม', 'error');
-      return;
-    }
+    if (!eq) { showToast('กรุณาเลือกเครื่องมือที่ต้องการส่งซ่อม', 'error'); return; }
 
     const newLog = {
       id: `M-${Math.floor(100 + Math.random() * 900)}`,
@@ -567,59 +318,37 @@ export default function App() {
       if (json.status === "success") {
         setMaintenanceLogs([newLog, ...maintenanceLogs]);
         setEquipmentList(prev => prev.map(i => i.id === eq.id ? { ...i, status: 'Maintenance' } : i));
-        showToast('บันทึกประวัติซ่อมบำรุงใน Google Sheets เรียบร้อยแล้ว', 'success');
+        showToast('บันทึกประวัติซ่อมบำรุงลง Google Sheets เรียบร้อยแล้ว', 'success');
         setShowAddMaintModal(false);
       } else {
         showToast(`เกิดข้อผิดพลาดจาก Google Sheets: ${json.message}`, 'error');
       }
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย', 'error');
+      showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets', 'error');
     }
   };
 
-  // ADMIN ACTION: ปรับวงเงินเครดิต + บันทึกประวัติ ลง Google Sheets
   const handleSaveAdjustCredit = async (e) => {
     e.preventDefault();
     if (!creditAdjustUser) return;
     const parsedCredit = parseFloat(newCreditAmount);
-
     const logData = {
-      id: `CL-${Math.floor(100 + Math.random() * 900)}`,
-      userId: creditAdjustUser.uid,
-      userName: creditAdjustUser.displayName,
-      userEmail: creditAdjustUser.email,
-      previousCredit: creditAdjustUser.creditLimit,
-      newCredit: parsedCredit,
-      adjustedBy: currentUser.displayName,
-      reason: creditAdjustReason || 'ปรับวงเงินโดย Admin'
+      id: `CL-${Math.floor(100 + Math.random() * 900)}`, userId: creditAdjustUser.uid, userName: creditAdjustUser.displayName,
+      userEmail: creditAdjustUser.email, previousCredit: creditAdjustUser.creditLimit, newCredit: parsedCredit,
+      adjustedBy: currentUser.displayName, reason: creditAdjustReason || 'ปรับวงเงินโดย Admin'
     };
-
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'adjustCredit', data: logData })
-      });
-
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'adjustCredit', data: logData }) });
       setUsersList(prev => prev.map(u => u.uid === creditAdjustUser.uid ? { ...u, creditLimit: parsedCredit } : u));
       setCreditLogs([logData, ...creditLogs]);
       showToast(`ปรับวงเงินคุณ ${creditAdjustUser.displayName} เป็น ${formatCurrency(parsedCredit)} เรียบร้อยแล้ว`, 'success');
       setShowAdjustCreditModal(false);
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกการปรับวงเงิน', 'error');
-    }
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกการปรับวงเงิน', 'error'); }
   };
 
   const handleOpenEditProfileModal = () => {
     if (!currentUser) return;
-    setProfileForm({
-      displayName: currentUser.displayName || '',
-      email: currentUser.email || '',
-      phone: currentUser.phone || '',
-      userType: currentUser.userType || 'นิสิต',
-      department: currentUser.department || '',
-      affiliationType: currentUser.affiliationType || 'ภายในคณะสหเวชศาสตร์'
-    });
+    setProfileForm({ displayName: currentUser.displayName || '', email: currentUser.email || '', phone: currentUser.phone || '', userType: currentUser.userType || 'นิสิต', department: currentUser.department || '', affiliationType: currentUser.affiliationType || 'ภายในคณะสหเวชศาสตร์' });
     setShowEditProfileModal(true);
   };
 
@@ -627,80 +356,46 @@ export default function App() {
     e.preventDefault();
     if (!currentUser) return;
     const updatedUser = { ...currentUser, ...profileForm };
-
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveUser', data: updatedUser })
-      });
-      setCurrentUser(updatedUser);
-      setUsersList((prev) => prev.map((u) => (u.uid === currentUser.uid ? updatedUser : u)));
-      setShowEditProfileModal(false);
-      showToast('อัปเดตข้อมูลประวัติส่วนตัวใน Google Sheets เรียบร้อยแล้ว', 'success');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-    }
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveUser', data: updatedUser }) });
+      setCurrentUser(updatedUser); setUsersList((prev) => prev.map((u) => (u.uid === currentUser.uid ? updatedUser : u)));
+      setShowEditProfileModal(false); showToast('อัปเดตข้อมูลประวัติส่วนตัวเรียบร้อยแล้ว', 'success');
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   };
 
-  // BOOKING HANDLERS
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
     const targetEquipment = equipmentList.find((item) => item.id === bookingForm.equipmentId);
-
     const newBooking = {
-      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
-      userId: currentUser.uid,
-      userName: currentUser.displayName,
-      equipmentId: targetEquipment.id,
-      equipmentName: targetEquipment.name,
-      date: bookingForm.date,
-      startTime: bookingForm.startTime,
-      endTime: bookingForm.endTime,
-      durationHours: calculatedBookingDetails.hours,
-      totalCost: calculatedBookingDetails.totalCost,
-      purpose: bookingForm.purpose,
-      status: 'Upcoming',
-      createdAt: new Date().toISOString()
+      id: `B-${Math.floor(1000 + Math.random() * 9000)}`, userId: currentUser.uid, userName: currentUser.displayName,
+      equipmentId: targetEquipment.id, equipmentName: targetEquipment.name, date: bookingForm.date, startTime: bookingForm.startTime,
+      endTime: bookingForm.endTime, durationHours: calculatedBookingDetails.hours, totalCost: calculatedBookingDetails.totalCost,
+      purpose: bookingForm.purpose, status: 'Upcoming', createdAt: new Date().toISOString()
     };
-
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'createBooking', data: newBooking })
-      });
-      setBookings([newBooking, ...bookings]);
-      showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success');
-      setActiveTab('history');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error');
-    }
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'createBooking', data: newBooking }) });
+      setBookings([newBooking, ...bookings]); showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success'); setActiveTab('history');
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error'); }
   };
 
   const handleCancelBooking = async (bookingId) => {
     try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'cancelBooking', bookingId: bookingId })
-      });
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'cancelBooking', bookingId: bookingId }) });
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b)));
       showToast('ยกเลิกรายการจองใน Google Sheets เรียบร้อยแล้ว', 'success');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการยกเลิก', 'error');
-    }
+    } catch (err) { showToast('เกิดข้อผิดพลาดในการยกเลิก', 'error'); }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
+      
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-5 right-5 z-50 animate-bounce">
-          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm font-medium ${
-            notification.type === 'error' ? 'bg-rose-600 text-white' :
-            notification.type === 'warning' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'
+        <div className="fixed top-5 right-5 z-[9999] animate-bounce">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 text-sm font-bold ${
+            notification.type === 'error' ? 'bg-rose-600 text-white border-rose-400' :
+            notification.type === 'warning' ? 'bg-amber-500 text-slate-950 border-amber-300' : 'bg-emerald-600 text-white border-emerald-400'
           }`}>
             <span>{notification.message}</span>
           </div>
@@ -766,7 +461,6 @@ export default function App() {
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
         {!currentUser ? (
-          /* LOGIN / REGISTER FORM */
           <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-amber-400">
@@ -790,31 +484,106 @@ export default function App() {
                 <button type="submit" className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl text-xs">เข้าสู่ระบบ</button>
               </form>
             ) : (
+              /* ฟอร์มลงทะเบียนพร้อมรายการภาควิชา/สาขาวิชาทั้ง 9 ตัวเลือก */
               <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ประเภทผู้ใช้งาน *</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRegisterForm({ ...registerForm, userType: 'นิสิต' })}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        registerForm.userType === 'นิสิต'
+                          ? 'bg-indigo-900 text-amber-400 border-indigo-900 shadow-md'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <GraduationCap className="w-4 h-4" /> นิสิต
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRegisterForm({ ...registerForm, userType: 'บุคลากร' })}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        registerForm.userType === 'บุคลากร'
+                          ? 'bg-indigo-900 text-amber-400 border-indigo-900 shadow-md'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Briefcase className="w-4 h-4" /> บุคลากร / อาจารย์
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล *</label>
                   <input type="text" required placeholder="นายสมชาย ใจดี" value={registerForm.displayName} onChange={(e) => setRegisterForm({...registerForm, displayName: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                 </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">รหัสนิสิต/บุคลากร *</label>
-                    <input type="text" required placeholder="6503XXXX" value={registerForm.studentId} onChange={(e) => setRegisterForm({...registerForm, studentId: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      {registerForm.userType === 'นิสิต' ? 'รหัสนิสิต *' : 'รหัสบุคลากร *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={registerForm.userType === 'นิสิต' ? '6503XXXX' : 'EMP-XXXX'}
+                      value={registerForm.studentId}
+                      onChange={(e) => setRegisterForm({...registerForm, studentId: e.target.value})}
+                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ *</label>
                     <input type="tel" required placeholder="08X-XXX-XXXX" value={registerForm.phone} onChange={(e) => setRegisterForm({...registerForm, phone: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">อีเมล ม.บูรพา *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ภาควิชา / สาขาวิชา / หน่วยงาน *</label>
+                  <select
+                    value={registerForm.department}
+                    onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })}
+                    className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
+                  >
+                    <option value="สาขาวิทยาศาสตร์การแพทย์">1. สาขาวิทยาศาสตร์การแพทย์</option>
+                    <option value="สาขาเทคนิคการแพทย์">2. สาขาเทคนิคการแพทย์</option>
+                    <option value="สาขาพยาธิวิทยากายวิภาค">3. สาขาพยาธิวิทยากายวิภาค</option>
+                    <option value="สาขาโภชนาการและการกำหนดอาหาร">4. สาขาโภชนาการและการกำหนดอาหาร</option>
+                    <option value="สาขาแพทย์แผนไทยประยุกต์">5. สาขาแพทย์แผนไทยประยุกต์</option>
+                    <option value="สาขากายภาพบำบัด">6. สาขากายภาพบำบัด</option>
+                    <option value="สาขาชีวเวชศาสตร์">7. สาขาชีวเวชศาสตร์</option>
+                    <option value="สาขาสำนักงานการศึกษา (แพทย์แผนจีน)">8. สาขาสำนักงานการศึกษา (แพทย์แผนจีน)</option>
+                    <option value="หน่วยงานภายนอกคณะ">9. หน่วยงานภายนอกคณะ (โปรดระบุ)</option>
+                  </select>
+                </div>
+
+                {registerForm.department === 'หน่วยงานภายนอกคณะ' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">ระบุชื่อหน่วยงานภายนอกคณะ *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="เช่น คณะพยาบาลศาสตร์ / โรงพยาบาล..."
+                      value={registerForm.customDepartment}
+                      onChange={(e) => setRegisterForm({ ...registerForm, customDepartment: e.target.value })}
+                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">อีเมล ม.บูรพา (@buu.ac.th หรือ @go.buu.ac.th) *</label>
                   <input type="email" required placeholder="name@go.buu.ac.th" value={registerForm.email} onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                 </div>
-                <button type="submit" className="w-full py-3.5 bg-amber-400 font-bold rounded-xl text-xs shadow-md mt-2">ยืนยันการลงทะเบียน (ซิงค์ Google Sheets)</button>
+
+                <button type="submit" className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 font-bold rounded-xl text-xs shadow-md mt-2 transition-all text-slate-950">
+                  ยืนยันการลงทะเบียน (ซิงค์ Google Sheets)
+                </button>
               </form>
             )}
           </div>
         ) : (
-          /* MAIN CONTENT FOR LOGGED-IN USERS */
           <div className="space-y-6">
 
             {/* User Quota Banner */}
@@ -830,7 +599,7 @@ export default function App() {
                   </h2>
                   <div className="flex items-center gap-2 flex-wrap mt-1">
                     <p className="text-xs text-slate-300">
-                      {currentUser.displayName} ({currentUser.userType || 'ผู้ใช้'}) • <strong className="text-slate-100">{currentUser.department || 'สังกัด ม.บูรพา'}</strong>
+                      {currentUser.displayName} <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300 font-bold">{currentUser.userType || 'นิสิต'}</span> • <strong className="text-slate-100">{currentUser.department || 'สังกัด ม.บูรพา'}</strong>
                     </p>
                     <button onClick={handleOpenEditProfileModal} className="bg-amber-400/20 hover:bg-amber-400 text-amber-300 hover:text-slate-950 border border-amber-400/40 px-2.5 py-0.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all">
                       <Edit className="w-3 h-3" /> แก้ไขประวัติ
@@ -1032,7 +801,7 @@ export default function App() {
               </div>
             )}
 
-            {/* ADMIN 2: MANAGE EQUIPMENT (พร้อมปุ่มสลับสถานะด่วน) */}
+            {/* ADMIN 2: MANAGE EQUIPMENT */}
             {activeTab === 'admin-eq' && isAdmin && (
               <div className="space-y-6">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
@@ -1108,20 +877,56 @@ export default function App() {
             {/* ADMIN 4: USERS & CREDIT AUDIT LOGS */}
             {activeTab === 'admin-users' && isAdmin && (
               <div className="space-y-6">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><DollarSign className="w-5 h-5 text-rose-600" /> จัดการผู้ใช้งาน & วงเงินฟรีเครดิต</h2>
+                <div className="bg-white p-5 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Users className="w-5 h-5 text-rose-600" /> จัดการผู้ใช้งาน & วงเงินฟรีเครดิต</h2>
                   <button onClick={handleExportUsersCSV} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow"><Download className="w-4 h-4"/> ส่งออกรายชื่อ (CSV)</button>
+                </div>
+
+                {/* สรุปสัดส่วนประเภทผู้ใช้งาน */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">ผู้ใช้งานรวม</p>
+                      <p className="text-2xl font-extrabold text-slate-900">{usersList.length} คน</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                      <GraduationCap className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">กลุ่มนิสิต</p>
+                      <p className="text-2xl font-extrabold text-indigo-900">{studentCount} คน</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                      <Briefcase className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">กลุ่มบุคลากร / อาจารย์</p>
+                      <p className="text-2xl font-extrabold text-amber-600">{staffCount} คน</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
                   <table className="w-full text-left text-xs text-slate-600">
-                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">ผู้ใช้งาน</th><th className="px-6 py-4">อีเมล/เบอร์โทร</th><th className="px-6 py-4">สถานะ</th><th className="px-6 py-4 text-right">วงเงินเครดิต</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
+                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">ผู้ใช้งาน</th><th className="px-6 py-4">ประเภท / สังกัด</th><th className="px-6 py-4">อีเมล / เบอร์โทร</th><th className="px-6 py-4 text-right">วงเงินเครดิต</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
                     <tbody className="divide-y divide-slate-200">
                       {usersList.map((u) => (
                         <tr key={u.uid} className="hover:bg-slate-50">
                           <td className="px-6 py-4 font-bold text-slate-900">{u.displayName} <div className="text-[10px] text-slate-400 font-normal">{u.studentId}</div></td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${u.userType === 'บุคลากร' || u.userType === 'อาจารย์' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}`}>
+                              {u.userType || 'นิสิต'}
+                            </span>
+                            <div className="text-[10px] text-slate-500 mt-0.5">{u.department || 'สหเวชศาสตร์'}</div>
+                          </td>
                           <td className="px-6 py-4">{u.email}<div className="text-[10px] text-slate-400">{u.phone}</div></td>
-                          <td className="px-6 py-4">{u.userType} • {u.department}</td>
                           <td className="px-6 py-4 text-right font-bold text-emerald-700">{formatCurrency(u.creditLimit)}</td>
                           <td className="px-6 py-4 text-center">
                             <button onClick={() => { setCreditAdjustUser(u); setNewCreditAmount(u.creditLimit); setShowAdjustCreditModal(true); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
@@ -1134,7 +939,6 @@ export default function App() {
                   </table>
                 </div>
 
-                {/* Audit Logs Table */}
                 <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
                   <h3 className="text-sm font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
                     <History className="w-4 h-4 text-indigo-900" /> ประวัติการปรับเปลี่ยนวงเงินเครดิต (Credit Audit Logs)
@@ -1196,7 +1000,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ADD / EDIT EQUIPMENT MODAL (เพิ่มตัวเลือกสถานะการใช้งาน) */}
       {showAddEqModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4 max-h-[90vh] overflow-y-auto">
