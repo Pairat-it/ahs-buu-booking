@@ -31,7 +31,6 @@ import {
   TrendingUp, 
   Settings, 
   DollarSign, 
-  KeyRound,
   FileSpreadsheet, 
   Download, 
   PieChart, 
@@ -42,8 +41,8 @@ import {
 // --- GOOGLE APPS SCRIPT API URL ---
 const API_URL = "https://script.google.com/macros/s/AKfycbw9-YvysfOmUUkKGF3izHa2I2jqv2N10S5C3LLQnyuD_6601EA7Tp0VTJRPaCTY0_k/exec";
 
-// --- INITIAL MOCK DATA (13 รายการจาก MS302 & MS408) ---
-const INITIAL_EQUIPMENT = [
+// --- INITIAL FALLBACK DATA (13 รายการเครื่องมือ MS302 & MS408) ---
+const FALLBACK_EQUIPMENT = [
   {
     id: 'eq-1',
     name: 'Thermal Cycler / PCR (Bio-Rad T100)',
@@ -67,8 +66,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 250,
     status: 'Available',
     image: '/eq-2.jpg',
-    description: 'Spectrophotometer วัดความเข้มข้น DNA/RNA และสารอื่นๆ ปริมาณน้อย (S/N: 183-16285-22030001 | ตัวแทน: U.Bangtrading 1992)',
-    specifications: 'Hercuvan Microvolume Spectrophotometer, S/N: 183-16285-22030001',
+    description: 'Spectrophotometer วัดความเข้มข้น DNA/RNA ปริมาณน้อย (S/N: 183-16285-22030001)',
+    specifications: 'Hercuvan Microvolume Spectrophotometer',
     totalHoursUsed: 30,
     maintenanceThresholdHours: 150
   },
@@ -81,8 +80,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 1000,
     status: 'Available',
     image: '/eq-3.jpg',
-    description: 'เครื่องเพิ่มปริมาณสารพันธุกรรมแบบ Real-time (S/N: 272-510-143 | ตัวแทน: บ.GenePlus)',
-    specifications: 'Thermo Fisher Scientific QuantStudio 5, S/N: 272-510-143',
+    description: 'เครื่องเพิ่มปริมาณสารพันธุกรรมแบบ Real-time (S/N: 272-510-143)',
+    specifications: 'Thermo Fisher Scientific QuantStudio 5',
     totalHoursUsed: 80,
     maintenanceThresholdHours: 200
   },
@@ -95,8 +94,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 500,
     status: 'Maintenance',
     image: '/eq-4.jpg',
-    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: 201-205-613-C | ตัวแทน: บ.BecThai - อนุมัติซ่อมแล้ว รอเข้าดำเนินการ)',
-    specifications: 'Labconco Freeze Dryer, S/N: 201-205-613-C',
+    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: 201-205-613-C | อนุมัติซ่อมแล้ว รอเข้าดำเนินการ)',
+    specifications: 'Labconco Freeze Dryer',
     totalHoursUsed: 190,
     maintenanceThresholdHours: 200
   },
@@ -109,8 +108,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 500,
     status: 'Available',
     image: '/eq-5.jpg',
-    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: MTC-27633 | ตัวแทน: บ.SPCRT)',
-    specifications: 'Christ Alpha 2-4 LSC, S/N: MTC-27633',
+    description: 'เครื่องทำสารให้แห้งภายใต้อุณหภูมิต่ำ (S/N: MTC-27633)',
+    specifications: 'Christ Alpha 2-4 LSC',
     totalHoursUsed: 60,
     maintenanceThresholdHours: 200
   },
@@ -123,8 +122,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 800,
     status: 'Available',
     image: '/eq-6.jpg',
-    description: 'เครื่องวิเคราะห์และแยกสารชนิดเหลวให้บริสุทธิ์ (ตัวแทน: บ.Bara scientific)',
-    specifications: 'Shimadzu High-Performance Liquid Chromatography System',
+    description: 'เครื่องวิเคราะห์และแยกสารชนิดเหลวให้บริสุทธิ์',
+    specifications: 'Shimadzu HPLC System',
     totalHoursUsed: 110,
     maintenanceThresholdHours: 250
   },
@@ -137,8 +136,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 750,
     status: 'Available',
     image: '/eq-7.jpg',
-    description: 'เครื่องวิเคราะห์และแยกโปรตีนให้บริสุทธิ์ (S/N: 20-703-31 | ตัวแทน: Bangtrading 1992)',
-    specifications: 'GE / Cytiva ÄKTA start FPLC System, S/N: 20-703-31',
+    description: 'เครื่องวิเคราะห์และแยกโปรตีนให้บริสุทธิ์ (S/N: 20-703-31)',
+    specifications: 'GE / Cytiva ÄKTA start FPLC System',
     totalHoursUsed: 75,
     maintenanceThresholdHours: 200
   },
@@ -151,8 +150,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 350,
     status: 'Available',
     image: '/eq-8.jpg',
-    description: 'เครื่องระเหยสารสกัด (S/N: KNF-1563-0324 | ตัวแทน: บ.SPCRT)',
-    specifications: 'KNF Rotary Evaporator System, S/N: KNF-1563-0324',
+    description: 'เครื่องระเหยสารสกัด (S/N: KNF-1563-0324)',
+    specifications: 'KNF Rotary Evaporator System',
     totalHoursUsed: 40,
     maintenanceThresholdHours: 150
   },
@@ -165,8 +164,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 200,
     status: 'Available',
     image: '/eq-9.jpg',
-    description: 'เครื่องปั่นเหวี่ยงตกตะกอนสาร (S/N: 5811-FN-079185 | ตัวแทน: Eppendorf Thailand)',
-    specifications: 'Eppendorf Centrifuge 5810/5810 R, S/N: 5811-FN-079185',
+    description: 'เครื่องปั่นเหวี่ยงตกตะกอนสาร (S/N: 5811-FN-079185)',
+    specifications: 'Eppendorf Centrifuge 5810/5810 R',
     totalHoursUsed: 95,
     maintenanceThresholdHours: 200
   },
@@ -179,8 +178,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 400,
     status: 'Available',
     image: '/eq-10.jpg',
-    description: 'เครื่องวัดปริมาณสารทางด้านภูมิคุ้มกันวิทยา (S/N: 3400-5-2203-171 | ตัวแทน: Bangtrading 1992)',
-    specifications: 'PerkinElmer Microplate Reader, S/N: 3400-5-2203-171',
+    description: 'เครื่องวัดปริมาณสารทางด้านภูมิคุ้มกันวิทยา (S/N: 3400-5-2203-171)',
+    specifications: 'PerkinElmer Microplate Reader',
     totalHoursUsed: 50,
     maintenanceThresholdHours: 150
   },
@@ -193,8 +192,8 @@ const INITIAL_EQUIPMENT = [
     ratePerHour: 450,
     status: 'Available',
     image: '/eq-11.jpg',
-    description: 'เครื่องถ่ายภาพเจลและบันทึกผลการทดลอง (S/N: T32-BR-1944 | บำรุงรักษาล่าสุด: Malikou)',
-    specifications: 'Bio-Rad ChemiDoc Gel Imaging System, S/N: T32-BR-1944',
+    description: 'เครื่องถ่ายภาพเจลและบันทึกผลการทดลอง (S/N: T32-BR-1944)',
+    specifications: 'Bio-Rad ChemiDoc Gel Imaging System',
     totalHoursUsed: 85,
     maintenanceThresholdHours: 200
   },
@@ -228,23 +227,6 @@ const INITIAL_EQUIPMENT = [
   }
 ];
 
-const INITIAL_USERS = [
-  {
-    uid: 'admin-001',
-    displayName: 'ดร.สมศักดิ์ ผู้ดูแลระบบแล็บ',
-    email: 'admin@buu.ac.th',
-    phone: '038-103-157',
-    studentId: 'ADMIN-01',
-    userType: 'นักวิทยาศาสตร์',
-    department: 'ศูนย์บริการเครื่องมือวิทยาศาสตร์กลาง',
-    affiliationType: 'ภายในคณะสหเวชศาสตร์',
-    role: 'Admin',
-    isBanned: false,
-    photoURL: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
-    creditLimit: 100000
-  }
-];
-
 const formatThaiDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -258,20 +240,19 @@ const formatCurrency = (amount) => {
 export default function App() {
   // --- STATES ---
   const [currentUser, setCurrentUser] = useState(null);
-  const [usersList, setUsersList] = useState(INITIAL_USERS);
-  const [activeTab, setActiveTab] = useState('catalog');
-  const [equipmentList, setEquipmentList] = useState(INITIAL_EQUIPMENT);
+  const [usersList, setUsersList] = useState([]);
+  const [equipmentList, setEquipmentList] = useState(FALLBACK_EQUIPMENT);
   const [bookings, setBookings] = useState([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [creditLogs, setCreditLogs] = useState([]);
-  
-  // Auth & Sync State
+
+  const [activeTab, setActiveTab] = useState('catalog');
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [loginEmail, setLoginEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  // Modals & Popups
   const [notification, setNotification] = useState(null);
+
+  // Modals
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [adminAuthError, setAdminAuthError] = useState('');
@@ -288,59 +269,27 @@ export default function App() {
 
   // Forms
   const [profileForm, setProfileForm] = useState({
-    displayName: '',
-    email: '',
-    phone: '',
-    userType: 'นิสิต',
-    department: '',
-    affiliationType: 'ภายในคณะสหเวชศาสตร์'
+    displayName: '', email: '', phone: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์'
   });
 
   const [registerForm, setRegisterForm] = useState({
-    displayName: '',
-    email: '',
-    phone: '',
-    studentId: '',
-    userType: 'นิสิต',
-    department: '',
-    affiliationType: 'ภายในคณะสหเวชศาสตร์'
+    displayName: '', email: '', phone: '', studentId: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์'
   });
 
   const [bookingForm, setBookingForm] = useState({
-    equipmentId: '',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    endTime: '11:00',
-    purpose: ''
+    equipmentId: '', date: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '11:00', purpose: ''
   });
 
   const [eqForm, setEqForm] = useState({
-    name: '',
-    category: 'Analytical Chemistry',
-    code: '',
-    location: '',
-    ratePerHour: 500,
-    status: 'Available',
-    image: '',
-    description: '',
-    specifications: '',
-    maintenanceThresholdHours: 200
+    name: '', category: 'Molecular Biology', code: '', location: 'ห้องปฏิบัติการ MS302', ratePerHour: 300, status: 'Available', image: '/eq-1.jpg', description: '', specifications: '', maintenanceThresholdHours: 200
   });
 
   const [maintForm, setMaintForm] = useState({
-    equipmentId: '',
-    type: 'Preventive Maintenance',
-    technician: '',
-    cost: '',
-    details: ''
+    equipmentId: '', type: 'Preventive Maintenance', technician: '', cost: '', details: ''
   });
 
-  // Filters & Analytics
+  // Filters
   const [calendarFilterEq, setCalendarFilterEq] = useState('ALL');
-  const [adminLogFilterEq, setAdminLogFilterEq] = useState('ALL');
-  const [adminLogFilterUser, setAdminLogFilterUser] = useState('ALL');
-  const [adminLogStartDate, setAdminLogStartDate] = useState('');
-  const [adminLogEndDate, setAdminLogEndDate] = useState('');
 
   const showToast = (message, type = 'success') => {
     setNotification({ message, type });
@@ -355,9 +304,10 @@ export default function App() {
       const json = await res.json();
       if (json.status === "success") {
         if (json.data.equipments && json.data.equipments.length > 0) setEquipmentList(json.data.equipments);
-        if (json.data.users && json.data.users.length > 0) setUsersList(json.data.users);
+        if (json.data.users) setUsersList(json.data.users);
         if (json.data.bookings) setBookings(json.data.bookings);
         if (json.data.maintenanceLogs) setMaintenanceLogs(json.data.maintenanceLogs);
+        if (json.data.creditLogs) setCreditLogs(json.data.creditLogs);
       }
     } catch (error) {
       console.error("Error fetching live data:", error);
@@ -373,45 +323,21 @@ export default function App() {
   // Remaining Credit Calculation
   const remainingCredit = useMemo(() => {
     if (!currentUser) return 0;
-    const userUpcomingBookings = bookings.filter(
-      (b) => b.userId === currentUser.uid && b.status === 'Upcoming'
-    );
+    const userUpcomingBookings = bookings.filter((b) => b.userId === currentUser.uid && b.status === 'Upcoming');
     const usedCost = userUpcomingBookings.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
     return Math.max(0, (Number(currentUser.creditLimit) || 50000) - usedCost);
   }, [currentUser, bookings]);
 
-  // Calculate booking hours & cost
+  // Calculated Booking Details
   const calculatedBookingDetails = useMemo(() => {
     const eq = equipmentList.find((item) => item.id === bookingForm.equipmentId);
-    if (!eq || !bookingForm.startTime || !bookingForm.endTime) {
-      return { hours: 0, totalCost: 0, valid: false, error: '' };
-    }
+    if (!eq || !bookingForm.startTime || !bookingForm.endTime) return { hours: 0, totalCost: 0, valid: false };
     const start = parseInt(bookingForm.startTime.split(':')[0], 10);
     const end = parseInt(bookingForm.endTime.split(':')[0], 10);
     const hours = end - start;
-    if (hours <= 0) return { hours: 0, totalCost: 0, valid: false, error: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น' };
-    return { hours, totalCost: hours * (Number(eq.ratePerHour) || 0), valid: true, error: '' };
+    if (hours <= 0) return { hours: 0, totalCost: 0, valid: false };
+    return { hours, totalCost: hours * (Number(eq.ratePerHour) || 0), valid: true };
   }, [bookingForm, equipmentList]);
-
-  // Admin Log Filters
-  const filteredAdminBookings = useMemo(() => {
-    return bookings.filter((b) => {
-      if (adminLogFilterEq !== 'ALL' && b.equipmentId !== adminLogFilterEq) return false;
-      if (adminLogFilterUser !== 'ALL' && b.userId !== adminLogFilterUser) return false;
-      if (adminLogStartDate && b.date < adminLogStartDate) return false;
-      if (adminLogEndDate && b.date > adminLogEndDate) return false;
-      return true;
-    });
-  }, [bookings, adminLogFilterEq, adminLogFilterUser, adminLogStartDate, adminLogEndDate]);
-
-  // Calendar Filter
-  const filteredCalendarBookings = useMemo(() => {
-    return bookings.filter((b) => {
-      if (b.status === 'Cancelled') return false;
-      if (calendarFilterEq === 'ALL') return true;
-      return b.equipmentId === calendarFilterEq;
-    });
-  }, [bookings, calendarFilterEq]);
 
   // Analytics Computation
   const equipmentUsageAnalytics = useMemo(() => {
@@ -434,16 +360,24 @@ export default function App() {
   const maxUsageHours = useMemo(() => Math.max(...equipmentUsageAnalytics.map(a => a.totalHours), 100), [equipmentUsageAnalytics]);
   const maxRevenue = useMemo(() => Math.max(...equipmentUsageAnalytics.map(a => a.totalRevenue), 10000), [equipmentUsageAnalytics]);
 
+  const filteredCalendarBookings = useMemo(() => {
+    return bookings.filter((b) => {
+      if (b.status === 'Cancelled') return false;
+      if (calendarFilterEq === 'ALL') return true;
+      return b.equipmentId === calendarFilterEq;
+    });
+  }, [bookings, calendarFilterEq]);
+
   const isAdmin = currentUser?.role === 'Admin';
 
   // Export CSV Handlers
   const handleExportCSV = () => {
-    if (filteredAdminBookings.length === 0) {
+    if (bookings.length === 0) {
       showToast('ไม่มีข้อมูลการใช้งานที่จะส่งออก', 'warning');
       return;
     }
     const headers = ['Booking ID', 'Equipment Name', 'User Name', 'Date', 'Start Time', 'End Time', 'Hours', 'Cost (THB)', 'Purpose', 'Status'];
-    const rows = filteredAdminBookings.map(b => [
+    const rows = bookings.map(b => [
       b.id, `"${b.equipmentName}"`, `"${b.userName}"`, b.date, b.startTime, b.endTime, b.durationHours, b.totalCost, `"${b.purpose || ''}"`, b.status
     ]);
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -462,22 +396,22 @@ export default function App() {
       showToast('ไม่มีข้อมูลผู้ใช้งานที่จะส่งออก', 'warning');
       return;
     }
-    const headers = ['UID / StudentID', 'Name', 'Email', 'Phone', 'User Type', 'Department', 'Affiliation', 'Credit Limit (THB)', 'Status'];
+    const headers = ['UID / StudentID', 'Name', 'Email', 'Phone', 'User Type', 'Department', 'Credit Limit (THB)', 'Status'];
     const rows = usersList.map(u => [
-      `"${u.studentId || u.uid}"`, `"${u.displayName}"`, `"${u.email}"`, `"${u.phone || '-'}"`, `"${u.userType || 'นิสิต'}"`, `"${u.department || ''}"`, `"${u.affiliationType || 'ภายในคณะ'}"`, u.creditLimit, u.isBanned ? 'Banned' : 'Active'
+      `"${u.studentId || u.uid}"`, `"${u.displayName}"`, `"${u.email}"`, `"${u.phone || '-'}"`, `"${u.userType || 'นิสิต'}"`, `"${u.department || ''}"`, u.creditLimit, u.isBanned ? 'Banned' : 'Active'
     ]);
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `AHS_Users_Directory_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `AHS_Users_Report_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('ดาวน์โหลดรายชื่อผู้ใช้เป็น CSV เรียบร้อยแล้ว', 'success');
+    showToast('ดาวน์โหลดรายชื่อผู้ใช้ CSV เรียบร้อยแล้ว', 'success');
   };
 
-  // --- AUTHENTICATION HANDLERS ---
+  // AUTHENTICATION HANDLERS
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     const emailInput = loginEmail.trim().toLowerCase();
@@ -500,7 +434,6 @@ export default function App() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     const email = registerForm.email.trim().toLowerCase();
-
     if (!email.endsWith('@buu.ac.th') && !email.endsWith('@go.buu.ac.th')) {
       showToast('กรุณาใช้อีเมลมหาวิทยาลัยบูรพา (@buu.ac.th หรือ @go.buu.ac.th)', 'error');
       return;
@@ -531,119 +464,120 @@ export default function App() {
       setCurrentUser(newUser);
       showToast(`ลงทะเบียนสำเร็จ! ยินดีต้อนรับคุณ ${newUser.displayName}`, 'success');
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลลง Google Sheets', 'error');
+      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
     }
   };
 
   const handleVerifyAdminPasscode = (e) => {
     e.preventDefault();
     if (adminPasscode === 'admin123') {
-      const adminAcc = usersList.find((u) => u.role === 'Admin') || INITIAL_USERS[0];
-      setCurrentUser(adminAcc);
+      const adminUser = usersList.find(u => u.role === 'Admin') || {
+        uid: 'admin-001',
+        displayName: 'ดร.สมศักดิ์ (Admin)',
+        email: 'admin@buu.ac.th',
+        role: 'Admin',
+        creditLimit: 100000,
+        photoURL: 'https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff'
+      };
+      setCurrentUser(adminUser);
       setShowAdminAuthModal(false);
-      showToast('เข้าสู่ระบบสิทธิ์ผู้ดูแลระบบ (Admin) สำเร็จ', 'success');
+      showToast('เข้าสู่ระบบผู้ดูแลระบบ (Admin) เรียบร้อยแล้ว', 'success');
     } else {
-      setAdminAuthError('รหัสผ่าน Admin ไม่ถูกต้อง (ลองใช้: admin123)');
+      setAdminAuthError('รหัสผ่าน Admin ไม่ถูกต้อง');
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
-  };
-
-  // --- BOOKING ACTIONS ---
-  const handleCreateBooking = async (e) => {
+  // ADMIN ACTIONS WITH GOOGLE SHEETS SYNC
+  const handleSaveEquipment = async (e) => {
     e.preventDefault();
-    if (!currentUser) {
-      showToast('กรุณาเข้าสู่ระบบก่อนทำรายการจอง', 'warning');
-      return;
-    }
-    if (currentUser.isBanned) {
-      showToast('บัญชีของคุณถูกงดใช้สิทธิ์ชั่วคราว ไม่สามารถจองเครื่องมือได้', 'error');
-      return;
-    }
-    if (!calculatedBookingDetails.valid) {
-      showToast(calculatedBookingDetails.error || 'กรุณาเลือกช่วงเวลาให้ถูกต้อง', 'error');
-      return;
-    }
-    if (remainingCredit < calculatedBookingDetails.totalCost) {
-      showToast('วงเงินฟรีเครดิตคงเหลือไม่เพียงพอสำหรับช่วงเวลานี้', 'error');
-      return;
-    }
+    const payload = editingEq 
+      ? { ...editingEq, ...eqForm }
+      : { id: `eq-${Date.now()}`, ...eqForm, totalHoursUsed: 0 };
 
-    const targetEquipment = equipmentList.find((item) => item.id === bookingForm.equipmentId);
-    
-    // Check Time Conflict
-    const hasConflict = bookings.some(
-      (b) =>
-        b.equipmentId === bookingForm.equipmentId &&
-        b.date === bookingForm.date &&
-        b.status === 'Upcoming' &&
-        ((bookingForm.startTime >= b.startTime && bookingForm.startTime < b.endTime) ||
-          (bookingForm.endTime > b.startTime && bookingForm.endTime <= b.endTime) ||
-          (bookingForm.startTime <= b.startTime && bookingForm.endTime >= b.endTime))
-    );
-
-    if (hasConflict) {
-      showToast('ช่วงเวลานี้ถูกจองไปแล้ว กรุณาเลือกวันหรือเวลาอื่น', 'error');
-      return;
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'saveEquipment', data: payload })
+      });
+      
+      if (editingEq) {
+        setEquipmentList(prev => prev.map(item => item.id === payload.id ? payload : item));
+        showToast('แก้ไขข้อมูลเครื่องมือใน Google Sheets เรียบร้อยแล้ว', 'success');
+      } else {
+        setEquipmentList(prev => [...prev, payload]);
+        showToast('เพิ่มเครื่องมือใหม่ลง Google Sheets เรียบร้อยแล้ว', 'success');
+      }
+      setShowAddEqModal(false);
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการบันทึกเครื่องมือลง Google Sheets', 'error');
     }
+  };
 
-    const newBooking = {
-      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
-      userId: currentUser.uid,
-      userName: currentUser.displayName,
-      equipmentId: targetEquipment.id,
-      equipmentName: targetEquipment.name,
-      date: bookingForm.date,
-      startTime: bookingForm.startTime,
-      endTime: bookingForm.endTime,
-      durationHours: calculatedBookingDetails.hours,
-      totalCost: calculatedBookingDetails.totalCost,
-      purpose: bookingForm.purpose,
-      status: 'Upcoming',
-      createdAt: new Date().toISOString()
+  const handleSaveMaintenanceLog = async (e) => {
+    e.preventDefault();
+    const eq = equipmentList.find((i) => i.id === maintForm.equipmentId);
+    if (!eq) return;
+
+    const newLog = {
+      id: `M-${Math.floor(100 + Math.random() * 900)}`,
+      equipmentId: eq.id,
+      equipmentName: eq.name,
+      date: new Date().toISOString().split('T')[0],
+      type: maintForm.type,
+      technician: maintForm.technician,
+      cost: parseFloat(maintForm.cost) || 0,
+      details: maintForm.details
     };
 
     try {
       await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'createBooking', data: newBooking })
+        body: JSON.stringify({ action: 'saveMaintenanceLog', data: newLog })
       });
-      setBookings([newBooking, ...bookings]);
-      showToast(`จองคิวสำเร็จ! รหัส ${newBooking.id} บันทึกลง Google Sheets เรียบร้อย`, 'success');
-      setBookingForm({
-        equipmentId: '',
-        date: new Date().toISOString().split('T')[0],
-        startTime: '09:00',
-        endTime: '11:00',
-        purpose: ''
-      });
-      setActiveTab('history');
+
+      setMaintenanceLogs([newLog, ...maintenanceLogs]);
+      setEquipmentList(prev => prev.map(i => i.id === eq.id ? { ...i, status: 'Maintenance' } : i));
+      showToast('บันทึกประวัติซ่อมบำรุงใน Google Sheets เรียบร้อยแล้ว', 'success');
+      setShowAddMaintModal(false);
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิวไปยัง Google Sheets', 'error');
+      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลซ่อมบำรุง', 'error');
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
+  const handleSaveAdjustCredit = async (e) => {
+    e.preventDefault();
+    if (!creditAdjustUser) return;
+    const parsedCredit = parseFloat(newCreditAmount);
+
+    const logData = {
+      id: `CL-${Math.floor(100 + Math.random() * 900)}`,
+      userId: creditAdjustUser.uid,
+      userName: creditAdjustUser.displayName,
+      userEmail: creditAdjustUser.email,
+      previousCredit: creditAdjustUser.creditLimit,
+      newCredit: parsedCredit,
+      adjustedBy: currentUser.displayName,
+      reason: creditAdjustReason || 'ปรับวงเงินโดย Admin'
+    };
+
     try {
       await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'cancelBooking', bookingId: bookingId })
+        body: JSON.stringify({ action: 'adjustCredit', data: logData })
       });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b))
-      );
-      showToast('ยกเลิกรายการจองและคืนเครดิตใน Google Sheets เรียบร้อยแล้ว', 'success');
+
+      setUsersList(prev => prev.map(u => u.uid === creditAdjustUser.uid ? { ...u, creditLimit: parsedCredit } : u));
+      setCreditLogs([logData, ...creditLogs]);
+      showToast(`ปรับวงเงินคุณ ${creditAdjustUser.displayName} เป็น ${formatCurrency(parsedCredit)} เรียบร้อยแล้ว`, 'success');
+      setShowAdjustCreditModal(false);
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่งคำขอยกเลิกไปยัง Google Sheets', 'error');
+      showToast('เกิดข้อผิดพลาดในการบันทึกการปรับวงเงิน', 'error');
     }
   };
 
-  // --- ADMIN & PROFILE ACTIONS ---
   const handleOpenEditProfileModal = () => {
     if (!currentUser) return;
     setProfileForm({
@@ -677,265 +611,181 @@ export default function App() {
     }
   };
 
-  const handleSaveAdjustCredit = (e) => {
+  // BOOKING HANDLERS
+  const handleCreateBooking = async (e) => {
     e.preventDefault();
-    if (!creditAdjustUser) return;
-    const parsedCredit = parseFloat(newCreditAmount);
-    if (isNaN(parsedCredit) || parsedCredit < 0) {
-      showToast('กรุณาระบุจำนวนวงเงินตัวเลขที่ถูกต้อง', 'error');
-      return;
+    if (!currentUser) return;
+    const targetEquipment = equipmentList.find((item) => item.id === bookingForm.equipmentId);
+
+    const newBooking = {
+      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
+      userId: currentUser.uid,
+      userName: currentUser.displayName,
+      equipmentId: targetEquipment.id,
+      equipmentName: targetEquipment.name,
+      date: bookingForm.date,
+      startTime: bookingForm.startTime,
+      endTime: bookingForm.endTime,
+      durationHours: calculatedBookingDetails.hours,
+      totalCost: calculatedBookingDetails.totalCost,
+      purpose: bookingForm.purpose,
+      status: 'Upcoming',
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'createBooking', data: newBooking })
+      });
+      setBookings([newBooking, ...bookings]);
+      showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success');
+      setActiveTab('history');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error');
     }
-    const prevCredit = creditAdjustUser.creditLimit;
-    setUsersList((prev) => prev.map((u) => u.uid === creditAdjustUser.uid ? { ...u, creditLimit: parsedCredit } : u));
-    if (currentUser?.uid === creditAdjustUser.uid) setCurrentUser({ ...currentUser, creditLimit: parsedCredit });
-    setCreditLogs([{ id: `CL-${Math.floor(100+Math.random()*900)}`, targetUserId: creditAdjustUser.uid, targetUserName: creditAdjustUser.displayName, previousCredit: prevCredit, newCredit: parsedCredit, adjustedBy: currentUser.displayName, reason: creditAdjustReason || 'ปรับวงเงินโดย Admin', timestamp: new Date().toISOString() }, ...creditLogs]);
-    showToast(`ปรับวงเงินให้คุณ ${creditAdjustUser.displayName} เป็น ${formatCurrency(parsedCredit)} เรียบร้อยแล้ว`, 'success');
-    setShowAdjustCreditModal(false);
   };
 
-  const handleToggleBanUser = (uid) => {
-    setUsersList((prev) => prev.map((u) => u.uid === uid ? { ...u, isBanned: !u.isBanned } : u));
-    showToast('ปรับสถานะการงดใช้สิทธิ์เรียบร้อยแล้ว', 'info');
-  };
-
-  const handleSaveEquipment = (e) => {
-    e.preventDefault();
-    if (editingEq) {
-      setEquipmentList((prev) => prev.map((item) => item.id === editingEq.id ? { ...item, ...eqForm, ratePerHour: parseFloat(eqForm.ratePerHour)||0 } : item));
-      showToast('แก้ไขข้อมูลเครื่องมือเรียบร้อยแล้ว', 'success');
-    } else {
-      setEquipmentList([...equipmentList, { id: `eq-${Date.now()}`, ...eqForm, ratePerHour: parseFloat(eqForm.ratePerHour)||0, totalHoursUsed: 0 }]);
-      showToast('เพิ่มเครื่องมือใหม่เรียบร้อยแล้ว', 'success');
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'cancelBooking', bookingId: bookingId })
+      });
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b)));
+      showToast('ยกเลิกรายการจองใน Google Sheets เรียบร้อยแล้ว', 'success');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการยกเลิก', 'error');
     }
-    setShowAddEqModal(false);
-  };
-
-  const handleSaveMaintenanceLog = (e) => {
-    e.preventDefault();
-    const eq = equipmentList.find((i) => i.id === maintForm.equipmentId);
-    if (!eq) return;
-    const newLog = { id: `M-${Math.floor(100+Math.random()*900)}`, equipmentId: eq.id, equipmentName: eq.name, date: new Date().toISOString().split('T')[0], type: maintForm.type, technician: maintForm.technician, cost: parseFloat(maintForm.cost)||0, details: maintForm.details };
-    setMaintenanceLogs([newLog, ...maintenanceLogs]);
-    setEquipmentList((prev) => prev.map((i) => (i.id === eq.id ? { ...i, status: 'Maintenance' } : i)));
-    showToast('บันทึกประวัติการส่งซ่อมบำรุงเรียบร้อยแล้ว', 'success');
-    setShowAddMaintModal(false);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
-      
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-5 right-5 z-50 animate-bounce">
           <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm font-medium ${
             notification.type === 'error' ? 'bg-rose-600 text-white' :
-            notification.type === 'warning' ? 'bg-amber-500 text-white' :
-            notification.type === 'info' ? 'bg-sky-600 text-white' : 'bg-emerald-600 text-white'
+            notification.type === 'warning' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'
           }`}>
             <span>{notification.message}</span>
           </div>
         </div>
       )}
 
-      {/* HEADER & BRANDING */}
+      {/* HEADER */}
       <header className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white border-b-4 border-amber-400 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            
-            <div className="flex items-center gap-4 text-center md:text-left">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-lg flex items-center justify-center shrink-0">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                  <Microscope className="w-8 h-8 text-amber-400" />
-                </div>
-              </div>
-              <div>
-                <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  AHS BUU Central Lab System
-                </span>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mt-0.5">
-                  ระบบบริการเครื่องมือวิจัย คณะสหเวชศาสตร์
-                </h1>
-                <p className="text-xs text-slate-300">มหาวิทยาลัยบูรพา (Faculty of Allied Health Sciences)</p>
-              </div>
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-400 rounded-xl flex items-center justify-center text-slate-950 font-bold">
+              <Microscope className="w-7 h-7" />
             </div>
+            <div>
+              <h1 className="text-xl font-bold">ระบบบริการเครื่องมือวิจัย คณะสหเวชศาสตร์</h1>
+              <p className="text-xs text-slate-300">มหาวิทยาลัยบูรพา (AHS BUU Central Lab)</p>
+            </div>
+          </div>
 
-            {/* Account Quick Selectors & Profile */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
-              {!currentUser ? (
-                <button
-                  onClick={() => { setAdminPasscode(''); setAdminAuthError(''); setShowAdminAuthModal(true); }}
-                  className="bg-rose-600/90 hover:bg-rose-600 text-white font-bold px-3 py-2 rounded-xl border border-rose-400/40 text-xs flex items-center gap-1.5 shadow"
-                >
-                  <Shield className="w-3.5 h-3.5" /> ล็อกอิน Admin
+          <div className="flex items-center gap-3">
+            {!currentUser ? (
+              <button 
+                onClick={() => { setAdminPasscode(''); setAdminAuthError(''); setShowAdminAuthModal(true); }}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow"
+              >
+                <Shield className="w-4 h-4" /> ล็อกอิน Admin
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-bold text-white">{currentUser.displayName}</p>
+                  <p className="text-[11px] text-amber-300">วงเงินคงเหลือ: {formatCurrency(remainingCredit)}</p>
+                </div>
+                <button onClick={() => setCurrentUser(null)} className="p-2 bg-slate-800 hover:bg-rose-600 rounded-xl text-xs" title="ลงชื่อออก">
+                  <LogOut className="w-4 h-4" />
                 </button>
-              ) : (
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-3 flex items-center gap-2.5 shadow-inner">
-                  <img src={currentUser.photoURL} alt={currentUser.displayName} className={`w-9 h-9 rounded-full border-2 object-cover ${isAdmin ? 'border-rose-400' : 'border-amber-400'}`} />
-                  <div className="text-left leading-tight hidden sm:block">
-                    <p className="text-xs font-semibold text-white flex items-center gap-1">
-                      {currentUser.displayName}
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${isAdmin ? 'bg-rose-500 text-white' : 'bg-amber-400 text-slate-950'}`}>
-                        {currentUser.role}
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-amber-300 font-medium">วงเงินคงเหลือ: {formatCurrency(remainingCredit)}</p>
-                  </div>
-                  <button onClick={handleLogout} title="ลงชื่อออก" className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-600 text-slate-300 hover:text-white transition-all">
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-
+              </div>
+            )}
           </div>
         </div>
 
-        {/* NAVIGATION TABS */}
         {currentUser && (
-          <div className="bg-slate-950/50 backdrop-blur border-t border-white/10 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto flex overflow-x-auto gap-2 py-2 scrollbar-none">
-              <button onClick={() => setActiveTab('catalog')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'catalog' ? 'bg-amber-400 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/10'}`}><Microscope className="w-4 h-4"/>แคตตาล็อกเครื่องมือ</button>
-              <button onClick={() => setActiveTab('booking')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'booking' ? 'bg-amber-400 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/10'}`}><PlusCircle className="w-4 h-4"/>จองการใช้งาน</button>
-              <button onClick={() => setActiveTab('calendar')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'calendar' ? 'bg-amber-400 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/10'}`}><CalendarIcon className="w-4 h-4"/>ตารางปฏิทิน</button>
-              <button onClick={() => setActiveTab('history')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'history' ? 'bg-amber-400 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/10'}`}><History className="w-4 h-4"/>ประวัติการจอง & คืนเครดิต</button>
-              <button onClick={() => setActiveTab('dashboard')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-amber-400 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/10'}`}><BarChart3 className="w-4 h-4"/>แดชบอร์ดสรุป</button>
+          <div className="bg-slate-950/60 px-4 py-2 flex gap-2 overflow-x-auto border-t border-white/10">
+            <button onClick={() => setActiveTab('catalog')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'catalog' ? 'bg-amber-400 text-slate-950' : 'text-slate-300'}`}>แคตตาล็อกเครื่องมือ</button>
+            <button onClick={() => setActiveTab('booking')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'booking' ? 'bg-amber-400 text-slate-950' : 'text-slate-300'}`}>จองการใช้งาน</button>
+            <button onClick={() => setActiveTab('calendar')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'calendar' ? 'bg-amber-400 text-slate-950' : 'text-slate-300'}`}>ตารางปฏิทิน</button>
+            <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'history' ? 'bg-amber-400 text-slate-950' : 'text-slate-300'}`}>ประวัติการจอง & คืนเครดิต</button>
+            <button onClick={() => setActiveTab('dashboard')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'dashboard' ? 'bg-amber-400 text-slate-950' : 'text-slate-300'}`}>แดชบอร์ดสรุป</button>
 
-              {isAdmin && (
-                <>
-                  <div className="h-6 w-px bg-white/20 mx-1 self-center" />
-                  <button onClick={() => setActiveTab('admin-analytics')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${activeTab === 'admin-analytics' ? 'bg-rose-600 text-white font-semibold' : 'bg-rose-950/60 text-rose-200 border border-rose-800/40'}`}><TrendingUp className="w-4 h-4"/>[Admin] สถิติ & บำรุงรักษา</button>
-                  <button onClick={() => setActiveTab('admin-eq')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${activeTab === 'admin-eq' ? 'bg-rose-600 text-white font-semibold' : 'bg-rose-950/60 text-rose-200 border border-rose-800/40'}`}><Settings className="w-4 h-4"/>[Admin] จัดการเครื่องมือ</button>
-                  <button onClick={() => setActiveTab('admin-maint')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${activeTab === 'admin-maint' ? 'bg-rose-600 text-white font-semibold' : 'bg-rose-950/60 text-rose-200 border border-rose-800/40'}`}><Wrench className="w-4 h-4"/>[Admin] ประวัติการซ่อมบำรุง</button>
-                  <button onClick={() => setActiveTab('admin-users')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${activeTab === 'admin-users' ? 'bg-rose-600 text-white font-semibold' : 'bg-rose-950/60 text-rose-200 border border-rose-800/40'}`}><DollarSign className="w-4 h-4"/>[Admin] จัดการผู้ใช้ & เครดิต</button>
-                </>
-              )}
-            </div>
+            {isAdmin && (
+              <>
+                <div className="h-6 w-px bg-white/20 mx-1 self-center" />
+                <button onClick={() => setActiveTab('admin-analytics')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'admin-analytics' ? 'bg-rose-600 text-white' : 'bg-rose-950/60 text-rose-200'}`}>[Admin] สถิติ & บำรุงรักษา</button>
+                <button onClick={() => setActiveTab('admin-eq')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'admin-eq' ? 'bg-rose-600 text-white' : 'bg-rose-950/60 text-rose-200'}`}>[Admin] จัดการเครื่องมือ</button>
+                <button onClick={() => setActiveTab('admin-maint')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'admin-maint' ? 'bg-rose-600 text-white' : 'bg-rose-950/60 text-rose-200'}`}>[Admin] ประวัติซ่อมบำรุง</button>
+                <button onClick={() => setActiveTab('admin-users')} className={`px-4 py-2 rounded-xl text-xs font-bold ${activeTab === 'admin-users' ? 'bg-rose-600 text-white' : 'bg-rose-950/60 text-rose-200'}`}>[Admin] ผู้ใช้ & เครดิต</button>
+              </>
+            )}
           </div>
         )}
       </header>
 
-      {/* MAIN BODY CONTAINER */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* หน้าเข้าสู่ระบบ & ลงทะเบียนครั้งแรก (เมื่อยังไม่ได้ล็อกอิน) */}
+      {/* MAIN CONTAINER */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
         {!currentUser ? (
-          <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6 animate-fadeIn">
+          /* LOGIN / REGISTER FORM */
+          <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-amber-400 shadow-md">
+              <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-amber-400">
                 <Microscope className="w-8 h-8 text-amber-400" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">
-                {authMode === 'login' ? 'เข้าสู่ระบบบริการเครื่องมือวิจัย' : 'ลงทะเบียนใช้งานครั้งแรก'}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">คณะสหเวชศาสตร์ มหาวิทยาลัยบูรพา (AHS BUU)</p>
+              <h2 className="text-xl font-bold text-slate-900">{authMode === 'login' ? 'เข้าสู่ระบบใช้งานจริง' : 'ลงทะเบียนใช้งานครั้งแรก'}</h2>
+              <p className="text-xs text-slate-500 mt-1">คณะสหเวชศาสตร์ มหาวิทยาลัยบูรพา</p>
             </div>
 
             <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
-              <button 
-                onClick={() => setAuthMode('login')} 
-                className={`flex-1 py-2 rounded-lg transition-all ${authMode === 'login' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}
-              >
-                เข้าสู่ระบบ
-              </button>
-              <button 
-                onClick={() => setAuthMode('register')} 
-                className={`flex-1 py-2 rounded-lg transition-all ${authMode === 'register' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}
-              >
-                ลงทะเบียนใหม่
-              </button>
+              <button onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-lg ${authMode === 'login' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>เข้าสู่ระบบ</button>
+              <button onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-lg ${authMode === 'register' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>ลงทะเบียนใหม่</button>
             </div>
 
             {authMode === 'login' ? (
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">อีเมล ม.บูรพา (@buu.ac.th หรือ @go.buu.ac.th) *</label>
-                  <input 
-                    type="email" 
-                    required 
-                    placeholder="username@go.buu.ac.th"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full p-3.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                  />
+                  <input type="email" required placeholder="username@go.buu.ac.th" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="w-full p-3.5 bg-slate-50 border rounded-xl text-xs font-semibold" />
                 </div>
-                <button type="submit" className="w-full py-3.5 bg-slate-900 hover:bg-amber-400 hover:text-slate-950 text-white font-bold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center gap-2">
-                  <LogIn className="w-4 h-4" /> เข้าสู่ระบบ
-                </button>
+                <button type="submit" className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl text-xs">เข้าสู่ระบบ</button>
               </form>
             ) : (
               <form onSubmit={handleRegisterSubmit} className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล *</label>
-                  <input 
-                    type="text" required placeholder="นายสมชาย ใจดี"
-                    value={registerForm.displayName}
-                    onChange={(e) => setRegisterForm({...registerForm, displayName: e.target.value})}
-                    className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                  />
+                  <input type="text" required placeholder="นายสมชาย ใจดี" value={registerForm.displayName} onChange={(e) => setRegisterForm({...registerForm, displayName: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">รหัสนิสิต/บุคลากร *</label>
-                    <input 
-                      type="text" required placeholder="6503XXXX"
-                      value={registerForm.studentId}
-                      onChange={(e) => setRegisterForm({...registerForm, studentId: e.target.value})}
-                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                    />
+                    <input type="text" required placeholder="6503XXXX" value={registerForm.studentId} onChange={(e) => setRegisterForm({...registerForm, studentId: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ *</label>
-                    <input 
-                      type="tel" required placeholder="08X-XXX-XXXX"
-                      value={registerForm.phone}
-                      onChange={(e) => setRegisterForm({...registerForm, phone: e.target.value})}
-                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                    />
+                    <input type="tel" required placeholder="08X-XXX-XXXX" value={registerForm.phone} onChange={(e) => setRegisterForm({...registerForm, phone: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">อีเมล ม.บูรพา *</label>
-                  <input 
-                    type="email" required placeholder="name@go.buu.ac.th"
-                    value={registerForm.email}
-                    onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
-                    className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                  />
+                  <input type="email" required placeholder="name@go.buu.ac.th" value={registerForm.email} onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">สถานะผู้ใช้งาน *</label>
-                    <select 
-                      value={registerForm.userType}
-                      onChange={(e) => setRegisterForm({...registerForm, userType: e.target.value})}
-                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                    >
-                      <option value="นิสิต">นิสิต (Student)</option>
-                      <option value="ผู้ช่วยนักวิจัย">ผู้ช่วยนักวิจัย</option>
-                      <option value="อาจารย์">อาจารย์</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">ภาควิชา/สังกัด *</label>
-                    <input 
-                      type="text" required placeholder="เทคนิคการแพทย์"
-                      value={registerForm.department}
-                      onChange={(e) => setRegisterForm({...registerForm, department: e.target.value})}
-                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold"
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md mt-2 flex items-center justify-center gap-2">
-                  <UserCheck className="w-4 h-4" /> ยืนยันการลงทะเบียน (ซิงค์ Google Sheets)
-                </button>
+                <button type="submit" className="w-full py-3.5 bg-amber-400 font-bold rounded-xl text-xs shadow-md mt-2">ยืนยันการลงทะเบียน (ซิงค์ Google Sheets)</button>
               </form>
             )}
           </div>
         ) : (
-          /* เนื้อหาแอปพลิเคชันเต็มรูปแบบ เมื่อเข้าสู่ระบบแล้ว */
+          /* MAIN CONTENT FOR LOGGED-IN USERS */
           <div className="space-y-6">
 
-            {/* User Credit Banner Card */}
+            {/* User Quota Banner */}
             <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-blue-950 text-white rounded-3xl p-6 shadow-xl border border-indigo-800/50 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-5">
                 <div className="w-16 h-16 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center shrink-0">
@@ -959,7 +809,7 @@ export default function App() {
 
               <div className="flex items-center gap-4 bg-slate-950/60 p-4 rounded-2xl border border-white/10 w-full md:w-auto justify-around">
                 <div className="text-center px-3">
-                  <p className="text-[11px] text-slate-400 uppercase">วงเงินรวม</p>
+                  <p className="text-[11px] text-slate-400 uppercase">วงเงินอนุมัติ</p>
                   <p className="text-sm font-bold text-slate-200">{formatCurrency(currentUser.creditLimit)}</p>
                 </div>
                 <div className="h-8 w-px bg-white/20" />
@@ -970,100 +820,81 @@ export default function App() {
               </div>
             </div>
 
-            {/* TAB 1: EQUIPMENT CATALOG */}
+            {/* TAB 1: CATALOG */}
             {activeTab === 'catalog' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                      <Microscope className="w-5 h-5 text-amber-500" /> รายการเครื่องมือวิทยาศาสตร์ชั้นสูง (MS302 & MS408)
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">เลือกเครื่องมือที่ต้องการใช้งานเพื่อจองคิว หรือตรวจสอบอัตราค่าบริการ</p>
-                  </div>
-                  <span className="text-xs text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl">มีทั้งหมด <strong>{equipmentList.length}</strong> รายการ</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {equipmentList.map((eq) => (
-                    <div key={eq.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 flex flex-col hover:shadow-xl transition-all">
-                      <div className="relative h-48 bg-slate-100">
-                        <img src={eq.image} alt={eq.name} className="w-full h-full object-cover" />
-                        <span className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg">{eq.category}</span>
-                        <span className={`absolute top-3 right-3 text-[11px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md ${eq.status === 'Available' ? 'bg-emerald-500/90 text-white' : 'bg-amber-500/90 text-white'}`}>
-                          {eq.status === 'Available' ? 'พร้อมใช้งาน' : 'กำลังซ่อมบำรุง'}
-                        </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {equipmentList.map((eq) => (
+                  <div key={eq.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 flex flex-col hover:shadow-xl transition-all">
+                    <div className="relative h-48 bg-slate-100">
+                      <img src={eq.image} alt={eq.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg">{eq.category}</span>
+                      <span className={`absolute top-3 right-3 text-[11px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md ${eq.status === 'Available' ? 'bg-emerald-500/90 text-white' : 'bg-amber-500/90 text-white'}`}>
+                        {eq.status === 'Available' ? 'พร้อมใช้งาน' : 'กำลังซ่อมบำรุง'}
+                      </span>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <span className="text-[10px] font-mono text-slate-400">{eq.code}</span>
+                        <h3 className="text-base font-bold text-slate-900">{eq.name}</h3>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{eq.description}</p>
                       </div>
-                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="pt-3 border-t flex justify-between items-center">
                         <div>
-                          <div className="text-[11px] font-mono text-slate-400 mb-1">{eq.code}</div>
-                          <h3 className="text-base font-bold text-slate-900 line-clamp-2">{eq.name}</h3>
-                          <p className="text-xs text-slate-600 mt-2 line-clamp-2">{eq.description}</p>
+                          <span className="text-[10px] text-slate-400 block uppercase">อัตราบริการ</span>
+                          <span className="text-lg font-bold text-indigo-900">{formatCurrency(eq.ratePerHour)}</span><span className="text-xs text-slate-500"> /ชม.</span>
                         </div>
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <div>
-                            <span className="text-[10px] text-slate-400 block uppercase">อัตราค่าบริการ</span>
-                            <span className="text-lg font-bold text-indigo-900">{formatCurrency(eq.ratePerHour)}</span><span className="text-xs text-slate-500"> /ชม.</span>
-                          </div>
-                          <button
-                            disabled={eq.status !== 'Available'}
-                            onClick={() => { setBookingForm((prev) => ({ ...prev, equipmentId: eq.id })); setActiveTab('booking'); }}
-                            className={`px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-1.5 transition-all shadow ${eq.status === 'Available' ? 'bg-amber-400 hover:bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                          >
-                            <PlusCircle className="w-4 h-4" /> จองเครื่องนี้
-                          </button>
-                        </div>
+                        <button disabled={eq.status !== 'Available'} onClick={() => { setBookingForm((prev) => ({ ...prev, equipmentId: eq.id })); setActiveTab('booking'); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold shadow">
+                          จองเครื่องนี้
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* TAB 2: BOOKING FORM */}
+            {/* TAB 2: BOOKING */}
             {activeTab === 'booking' && (
-              <div className="max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6 animate-fadeIn">
-                <div className="border-b pb-4">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><PlusCircle className="w-6 h-6 text-amber-500" /> จองคิวใช้งานเครื่องมือ</h2>
-                  <p className="text-xs text-slate-500 mt-1">กรอกรายละเอียด วัน เวลา และวัตถุประสงค์ในการเข้าใช้งาน</p>
-                </div>
+              <div className="max-w-xl mx-auto bg-white p-6 rounded-3xl shadow-sm border space-y-4">
+                <h2 className="text-lg font-bold text-slate-900">จองคิวใช้งานเครื่องมือ</h2>
                 <form onSubmit={handleCreateBooking} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">1. เลือกเครื่องมือวิทยาศาสตร์ *</label>
-                    <select required value={bookingForm.equipmentId} onChange={(e) => setBookingForm({ ...bookingForm, equipmentId: e.target.value })} className="w-full p-3.5 bg-slate-50 border rounded-2xl text-xs font-semibold">
-                      <option value="">-- กรุณาเลือกเครื่องมือ --</option>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">เลือกเครื่องมือ *</label>
+                    <select required value={bookingForm.equipmentId} onChange={(e) => setBookingForm({ ...bookingForm, equipmentId: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold">
+                      <option value="">-- เลือกเครื่องมือ --</option>
                       {equipmentList.map((eq) => (
                         <option key={eq.id} value={eq.id} disabled={eq.status !== 'Available'}>{eq.name} ({formatCurrency(eq.ratePerHour)}/ชม.)</option>
                       ))}
                     </select>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">2. วันที่จอง *</label>
-                      <input type="date" required min={new Date().toISOString().split('T')[0]} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full p-3.5 bg-slate-50 border rounded-2xl text-xs font-semibold" />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">วันที่ต้องการจอง *</label>
+                    <input type="date" required min={new Date().toISOString().split('T')[0]} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">เวลาเริ่ม *</label>
-                      <select value={bookingForm.startTime} onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })} className="w-full p-3.5 bg-slate-50 border rounded-2xl text-xs">
-                        {['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
+                      <select value={bookingForm.startTime} onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs">
+                        {['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">เวลาสิ้นสุด *</label>
-                      <select value={bookingForm.endTime} onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })} className="w-full p-3.5 bg-slate-50 border rounded-2xl text-xs">
-                        {['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
+                      <select value={bookingForm.endTime} onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs">
+                        {['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">3. วัตถุประสงค์ในการทดลอง *</label>
-                    <textarea rows="3" required value={bookingForm.purpose} onChange={(e) => setBookingForm({ ...bookingForm, purpose: e.target.value })} placeholder="ระบุโครงการวิจัย..." className="w-full p-3.5 bg-slate-50 border rounded-2xl text-xs" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1">วัตถุประสงค์ในการจอง *</label>
+                    <textarea required rows="2" value={bookingForm.purpose} onChange={(e) => setBookingForm({ ...bookingForm, purpose: e.target.value })} placeholder="ระบุโครงการวิจัย..." className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                   </div>
-                  <div className="p-5 rounded-2xl bg-slate-900 text-white space-y-2">
-                    <div className="flex justify-between text-xs"><span className="text-slate-400">ระยะเวลา:</span><span className="font-bold text-amber-300">{calculatedBookingDetails.hours} ชม.</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-slate-400">ค่าบริการรวม:</span><span className="text-xl font-bold text-amber-400">{formatCurrency(calculatedBookingDetails.totalCost)}</span></div>
+                  <div className="p-4 bg-slate-900 text-white rounded-2xl flex justify-between items-center text-xs">
+                    <span>ค่าบริการรวม: <strong className="text-amber-400 text-base">{formatCurrency(calculatedBookingDetails.totalCost)}</strong></span>
+                    <span>วงเงินคงเหลือ: <strong className="text-emerald-400">{formatCurrency(remainingCredit - calculatedBookingDetails.totalCost)}</strong></span>
                   </div>
-                  <button type="submit" disabled={!calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} className="w-full py-4 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-2xl text-xs shadow-lg flex items-center justify-center gap-2">
-                    <CheckCircle className="w-5 h-5" /> ยืนยันการจองคิว (ซิงค์ Google Sheets)
+                  <button type="submit" disabled={!calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs shadow-md">
+                    ยืนยันการจองคิว (ซิงค์ Google Sheets)
                   </button>
                 </form>
               </div>
@@ -1071,20 +902,20 @@ export default function App() {
 
             {/* TAB 3: CALENDAR */}
             {activeTab === 'calendar' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><CalendarIcon className="w-5 h-5 text-amber-500" /> ตารางปฏิทินแสดงคิวการจอง</h2>
+              <div className="space-y-6">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><CalendarIcon className="w-5 h-5 text-amber-500" /> ตารางปฏิทินแสดงคิวการจอง</h2>
                   <select value={calendarFilterEq} onChange={(e) => setCalendarFilterEq(e.target.value)} className="bg-slate-50 border rounded-xl px-3 py-2 text-xs font-semibold">
                     <option value="ALL">เครื่องมือทั้งหมด ({equipmentList.length})</option>
                     {equipmentList.map(eq => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                   </select>
                 </div>
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-white rounded-3xl p-6 shadow-sm border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredCalendarBookings.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-slate-400 text-xs">ไม่มีคิวการจองในขณะนี้</div>
                   ) : (
                     filteredCalendarBookings.map((b) => (
-                      <div key={b.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div key={b.id} className="p-4 rounded-2xl bg-slate-50 border space-y-2">
                         <div className="flex justify-between items-center"><span className="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-400 text-slate-950">{formatThaiDate(b.date)}</span><span className="text-xs font-bold text-indigo-900">{b.startTime} - {b.endTime} น.</span></div>
                         <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{b.equipmentName}</h4>
                         <div className="text-[11px] text-slate-500 pt-2 border-t flex justify-between"><span>ผู้จอง: <strong>{b.userName}</strong></span><span>{b.id}</span></div>
@@ -1097,44 +928,40 @@ export default function App() {
 
             {/* TAB 4: HISTORY & REFUNDS */}
             {activeTab === 'history' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><History className="w-5 h-5 text-amber-500" /> ประวัติการจองและระบบคืนเครดิต</h2>
-                </div>
-                <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 border-b text-xs font-bold text-slate-500 uppercase">
-                      <tr><th className="px-6 py-4">รหัสการจอง</th><th className="px-6 py-4">เครื่องมือ</th><th className="px-6 py-4">วันที่ / เวลา</th><th className="px-6 py-4 text-right">ค่าบริการ</th><th className="px-6 py-4 text-center">สถานะ</th><th className="px-6 py-4 text-center">การจัดการ</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {bookings.filter(b => b.userId === currentUser.uid).length === 0 ? (
-                        <tr><td colSpan="6" className="py-12 text-center text-slate-400 text-xs">ยังไม่มีประวัติการจอง</td></tr>
-                      ) : (
-                        bookings.filter(b => b.userId === currentUser.uid).map((b) => (
-                          <tr key={b.id} className="hover:bg-slate-50">
-                            <td className="px-6 py-4 font-mono font-bold text-xs text-indigo-900">{b.id}</td>
-                            <td className="px-6 py-4"><div className="font-bold text-slate-900">{b.equipmentName}</div><div className="text-xs text-slate-400">{b.purpose}</div></td>
-                            <td className="px-6 py-4 text-xs"><div className="font-semibold">{formatThaiDate(b.date)}</div><div className="text-slate-500">{b.startTime} - {b.endTime} น.</div></td>
-                            <td className="px-6 py-4 text-right font-bold">{formatCurrency(b.totalCost)}</td>
-                            <td className="px-6 py-4 text-center"><span className={`text-xs font-bold px-3 py-1 rounded-full ${b.status === 'Upcoming' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{b.status === 'Upcoming' ? 'จองสำเร็จ' : 'ยกเลิกแล้ว'}</span></td>
-                            <td className="px-6 py-4 text-center">
-                              {b.status === 'Upcoming' ? (
-                                <button onClick={() => handleCancelBooking(b.id)} className="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-xs border border-rose-200 flex items-center gap-1 mx-auto"><XCircle className="w-3.5 h-3.5" /> ยกเลิก & คืนเครดิต</button>
-                              ) : <span className="text-xs text-slate-400 italic">คืนเครดิตแล้ว</span>}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+              <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
+                <h2 className="text-lg font-bold text-slate-900">ประวัติการจองและการคืนเครดิต ({currentUser.displayName})</h2>
+                <div className="space-y-3">
+                  {bookings.filter(b => b.userId === currentUser.uid).length === 0 ? (
+                    <p className="text-xs text-slate-400 py-8 text-center">ยังไม่มีประวัติการจอง</p>
+                  ) : (
+                    bookings.filter(b => b.userId === currentUser.uid).map((b) => (
+                      <div key={b.id} className="p-4 rounded-2xl bg-slate-50 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                          <span className="text-[11px] font-mono text-indigo-900 font-bold">{b.id} • {formatThaiDate(b.date)} ({b.startTime} - {b.endTime} น.)</span>
+                          <h4 className="text-sm font-bold text-slate-900">{b.equipmentName}</h4>
+                          <p className="text-xs text-slate-500">{b.purpose}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-sm text-slate-900">{formatCurrency(b.totalCost)}</span>
+                          {b.status === 'Upcoming' ? (
+                            <button onClick={() => handleCancelBooking(b.id)} className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-200">
+                              ยกเลิก & คืนเครดิต
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">ยกเลิกแล้ว</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
 
             {/* TAB 5: DASHBOARD */}
             {activeTab === 'dashboard' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border"><h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-amber-500" /> แดชบอร์ดสรุปภาพรวมการใช้งาน</h2></div>
+              <div className="space-y-6">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border"><h2 className="text-lg font-bold text-slate-900">แดชบอร์ดสรุปภาพรวมการใช้งาน</h2></div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="bg-white p-6 rounded-3xl shadow-sm border flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center"><CreditCard className="w-6 h-6"/></div><div><p className="text-xs text-slate-400 font-semibold uppercase">เครดิตคงเหลือ</p><p className="text-2xl font-extrabold">{formatCurrency(remainingCredit)}</p></div></div>
                   <div className="bg-white p-6 rounded-3xl shadow-sm border flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center"><Clock className="w-6 h-6"/></div><div><p className="text-xs text-slate-400 font-semibold uppercase">ชั่วโมงที่จองรวม</p><p className="text-2xl font-extrabold">{bookings.filter(b => b.userId === currentUser.uid && b.status === 'Upcoming').reduce((sum, b) => sum + (Number(b.durationHours)||0), 0)} ชม.</p></div></div>
@@ -1143,11 +970,11 @@ export default function App() {
               </div>
             )}
 
-            {/* ADMIN ONLY TABS */}
+            {/* ADMIN 1: ANALYTICS */}
             {activeTab === 'admin-analytics' && isAdmin && (
-              <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-6">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-rose-500" /> การวิเคราะห์สถิติ & ดัชนีบำรุงรักษา</h2>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-rose-600" /> การวิเคราะห์สถิติ & ดัชนีบำรุงรักษา</h2>
                   <button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow"><FileDown className="w-4 h-4"/> ส่งออก CSV</button>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1173,68 +1000,27 @@ export default function App() {
               </div>
             )}
 
+            {/* ADMIN 2: MANAGE EQUIPMENT */}
             {activeTab === 'admin-eq' && isAdmin && (
-              <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-6">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Settings className="w-5 h-5 text-rose-500" /> จัดการเครื่องมือวิทยาศาสตร์ (CRUD)</h2>
-                  <button onClick={() => { setEditingEq(null); setEqForm({ name:'', category:'Analytical Chemistry', code:'', location:'', ratePerHour:500, status:'Available', image:'', description:'', specifications:'', maintenanceThresholdHours:200 }); setShowAddEqModal(true); }} className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow"><Plus className="w-4 h-4"/> เพิ่มเครื่องมือใหม่</button>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Settings className="w-5 h-5 text-rose-600" /> จัดการเครื่องมือวิทยาศาสตร์</h2>
+                  <button onClick={() => { setEditingEq(null); setEqForm({ name:'', category:'Molecular Biology', code:'', location:'ห้องปฏิบัติการ MS302', ratePerHour:300, status:'Available', image:'/eq-1.jpg', description:'', specifications:'', maintenanceThresholdHours:200 }); setShowAddEqModal(true); }} className="bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1 shadow">
+                    <Plus className="w-4 h-4" /> เพิ่มเครื่องมือใหม่
+                  </button>
                 </div>
                 <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 border-b text-xs font-bold uppercase"><tr><th className="px-6 py-4">เครื่องมือ</th><th className="px-6 py-4">สถานที่ตั้ง</th><th className="px-6 py-4 text-right">ค่าบริการ</th><th className="px-6 py-4 text-center">สถานะ</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
+                  <table className="w-full text-left text-xs text-slate-600">
+                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">เครื่องมือ</th><th className="px-6 py-4">สถานที่</th><th className="px-6 py-4 text-right">ค่าบริการ</th><th className="px-6 py-4 text-center">สถานะ</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
                     <tbody className="divide-y divide-slate-200">
                       {equipmentList.map((eq) => (
                         <tr key={eq.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4"><div className="font-bold text-slate-900">{eq.name}</div><div className="text-xs text-slate-400">{eq.code}</div></td>
-                          <td className="px-6 py-4 text-xs">{eq.location}</td>
+                          <td className="px-6 py-4 font-bold text-slate-900">{eq.name} <div className="text-[10px] text-slate-400 font-normal">{eq.code}</div></td>
+                          <td className="px-6 py-4">{eq.location}</td>
                           <td className="px-6 py-4 text-right font-bold">{formatCurrency(eq.ratePerHour)}/ชม.</td>
-                          <td className="px-6 py-4 text-center"><span className={`text-xs font-bold px-3 py-1 rounded-full ${eq.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{eq.status}</span></td>
-                          <td className="px-6 py-4 text-center"><button onClick={() => { setEditingEq(eq); setEqForm(eq); setShowAddEqModal(true); }} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Edit className="w-4 h-4"/></button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'admin-maint' && isAdmin && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Wrench className="w-5 h-5 text-rose-500" /> ประวัติการซ่อมบำรุงรักษา</h2>
-                  <button onClick={() => setShowAddMaintModal(true)} className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow"><Plus className="w-4 h-4"/> บันทึกงานซ่อมใหม่</button>
-                </div>
-                <div className="space-y-4">
-                  {maintenanceLogs.map((log) => (
-                    <div key={log.id} className="bg-white p-6 rounded-3xl shadow-sm border space-y-2">
-                      <div className="flex justify-between items-center border-b pb-2"><h3 className="text-base font-bold">{log.equipmentName}</h3><span className="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">{log.type}</span></div>
-                      <p className="text-xs text-slate-600">{log.details}</p>
-                      <div className="flex justify-between text-xs text-slate-500 pt-2 border-t"><span>ผู้ดูแล: <strong>{log.technician}</strong></span><span className="text-rose-600 font-bold">{formatCurrency(log.cost)}</span></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'admin-users' && isAdmin && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><DollarSign className="w-5 h-5 text-rose-500" /> จัดการผู้ใช้งาน & วงเงินเครดิต</h2>
-                  <button onClick={handleExportUsersCSV} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow"><Download className="w-4 h-4"/> ส่งออกรายชื่อ (CSV)</button>
-                </div>
-                <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 border-b text-xs font-bold uppercase"><tr><th className="px-6 py-4">ผู้ใช้งาน</th><th className="px-6 py-4">เบอร์โทรศัพท์</th><th className="px-6 py-4">สังกัด</th><th className="px-6 py-4 text-right">วงเงินอนุมัติ</th><th className="px-6 py-4 text-center">การจัดการ</th></tr></thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {usersList.map((u) => (
-                        <tr key={u.uid} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 font-bold text-slate-900">{u.displayName} <div className="text-xs text-slate-400 font-normal">{u.email}</div></td>
-                          <td className="px-6 py-4 text-xs font-semibold">{u.phone || '-'}</td>
-                          <td className="px-6 py-4 text-xs">{u.userType} • {u.department}</td>
-                          <td className="px-6 py-4 text-right font-bold text-emerald-700">{formatCurrency(u.creditLimit)}</td>
-                          <td className="px-6 py-4 text-center whitespace-nowrap">
-                            <button onClick={() => { setCreditAdjustUser(u); setNewCreditAmount(u.creditLimit); setShowAdjustCreditModal(true); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs mr-2 shadow">ปรับวงเงิน</button>
-                            <button onClick={() => handleToggleBanUser(u.uid)} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${u.isBanned ? 'bg-emerald-600 text-white' : 'bg-rose-50 text-rose-600 border border-rose-200'}`}>{u.isBanned ? 'ปลดระงับ' : 'งดใช้งาน'}</button>
+                          <td className="px-6 py-4 text-center"><span className={`px-2.5 py-1 rounded-full font-bold ${eq.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{eq.status}</span></td>
+                          <td className="px-6 py-4 text-center">
+                            <button onClick={() => { setEditingEq(eq); setEqForm(eq); setShowAddEqModal(true); }} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"><Edit className="w-4 h-4" /></button>
                           </td>
                         </tr>
                       ))}
@@ -1244,22 +1030,105 @@ export default function App() {
               </div>
             )}
 
+            {/* ADMIN 3: MAINTENANCE LOGS */}
+            {activeTab === 'admin-maint' && isAdmin && (
+              <div className="space-y-6">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Wrench className="w-5 h-5 text-rose-600" /> ประวัติงานซ่อมบำรุงรักษา</h2>
+                  <button onClick={() => setShowAddMaintModal(true)} className="bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1 shadow">
+                    <Plus className="w-4 h-4" /> บันทึกงานซ่อมใหม่
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {maintenanceLogs.length === 0 ? <p className="text-xs text-slate-400 py-8 text-center bg-white rounded-3xl border">ยังไม่มีประวัติการส่งซ่อม</p> : maintenanceLogs.map((log) => (
+                    <div key={log.id} className="bg-white p-5 rounded-3xl shadow-sm border space-y-2">
+                      <div className="flex justify-between items-center border-b pb-2">
+                        <h4 className="font-bold text-sm text-slate-900">{log.equipmentName}</h4>
+                        <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-3 py-0.5 rounded-full">{log.type}</span>
+                      </div>
+                      <p className="text-xs text-slate-600">{log.details}</p>
+                      <div className="flex justify-between text-xs text-slate-400 pt-2 border-t">
+                        <span>ช่าง/บริษัท: <strong>{log.technician}</strong></span>
+                        <span className="text-rose-600 font-bold">{formatCurrency(log.cost)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ADMIN 4: USERS & CREDIT AUDIT LOGS */}
+            {activeTab === 'admin-users' && isAdmin && (
+              <div className="space-y-6">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><DollarSign className="w-5 h-5 text-rose-600" /> จัดการผู้ใช้งาน & วงเงินฟรีเครดิต</h2>
+                  <button onClick={handleExportUsersCSV} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow"><Download className="w-4 h-4"/> ส่งออกรายชื่อ (CSV)</button>
+                </div>
+
+                <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                  <table className="w-full text-left text-xs text-slate-600">
+                    <thead className="bg-slate-50 border-b font-bold uppercase"><tr><th className="px-6 py-4">ผู้ใช้งาน</th><th className="px-6 py-4">อีเมล/เบอร์โทร</th><th className="px-6 py-4">สถานะ</th><th className="px-6 py-4 text-right">วงเงินเครดิต</th><th className="px-6 py-4 text-center">จัดการ</th></tr></thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {usersList.map((u) => (
+                        <tr key={u.uid} className="hover:bg-slate-50">
+                          <td className="px-6 py-4 font-bold text-slate-900">{u.displayName} <div className="text-[10px] text-slate-400 font-normal">{u.studentId}</div></td>
+                          <td className="px-6 py-4">{u.email}<div className="text-[10px] text-slate-400">{u.phone}</div></td>
+                          <td className="px-6 py-4">{u.userType} • {u.department}</td>
+                          <td className="px-6 py-4 text-right font-bold text-emerald-700">{formatCurrency(u.creditLimit)}</td>
+                          <td className="px-6 py-4 text-center">
+                            <button onClick={() => { setCreditAdjustUser(u); setNewCreditAmount(u.creditLimit); setShowAdjustCreditModal(true); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
+                              ปรับวงเงิน
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Audit Logs Table */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
+                  <h3 className="text-sm font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+                    <History className="w-4 h-4 text-indigo-900" /> ประวัติการปรับเปลี่ยนวงเงินเครดิต (Credit Audit Logs)
+                  </h3>
+                  <div className="space-y-3">
+                    {creditLogs.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-4 text-center">ยังไม่มีประวัติการปรับวงเงิน</p>
+                    ) : (
+                      creditLogs.map((log) => (
+                        <div key={log.id} className="p-3.5 rounded-2xl bg-slate-50 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                          <div>
+                            <span className="font-bold text-slate-900">{log.userName}</span> ({log.userEmail})
+                            <p className="text-[11px] text-slate-500">เหตุผล: {log.reason} • ปรับโดย: <strong>{log.adjustedBy}</strong></p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-slate-400 line-through mr-2">{formatCurrency(log.previousCredit)}</span>
+                            <span className="font-bold text-emerald-600 text-sm">{formatCurrency(log.newCredit)}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
           </div>
         )}
-
       </main>
 
       {/* --- MODALS --- */}
       {showAdminAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-200 space-y-4">
-            <h3 className="text-lg font-bold text-slate-900 text-center">ยืนยันตัวตนผู้ดูแลระบบ (Admin Passcode)</h3>
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 text-center">ยืนยันตัวตนผู้ดูแลระบบ (Admin)</h3>
             <form onSubmit={handleVerifyAdminPasscode} className="space-y-4">
-              <input type="password" required value={adminPasscode} onChange={(e) => setAdminPasscode(e.target.value)} placeholder="ใส่รหัสผ่าน (ทดสอบ: admin123)" className="w-full p-3 bg-slate-50 border rounded-xl text-sm" />
+              <input type="password" required value={adminPasscode} onChange={(e) => setAdminPasscode(e.target.value)} placeholder="ใส่รหัสผ่าน (admin123)" className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold" />
               {adminAuthError && <p className="text-xs text-rose-600 font-bold">{adminAuthError}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowAdminAuthModal(false)} className="w-1/2 py-2.5 bg-slate-100 text-xs font-bold rounded-xl">ยกเลิก</button>
-                <button type="submit" className="w-1/2 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow">ยืนยัน</button>
+                <button type="submit" className="w-1/2 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl">ยืนยัน</button>
               </div>
             </form>
           </div>
@@ -1269,11 +1138,56 @@ export default function App() {
       {showAdjustCreditModal && creditAdjustUser && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4">
-            <h3 className="text-lg font-bold">ปรับวงเงินฟรีเครดิต ({creditAdjustUser.displayName})</h3>
+            <h3 className="text-lg font-bold text-slate-900">ปรับวงเงินเครดิต ({creditAdjustUser.displayName})</h3>
             <form onSubmit={handleSaveAdjustCredit} className="space-y-4">
-              <div><label className="block text-xs font-bold mb-1">วงเงินใหม่ (บาท)</label><input type="number" required value={newCreditAmount} onChange={(e) => setNewCreditAmount(e.target.value)} className="w-full p-3 bg-slate-50 border rounded-xl font-bold" /></div>
-              <div><label className="block text-xs font-bold mb-1">เหตุผล</label><textarea required rows="2" value={creditAdjustReason} onChange={(e) => setCreditAdjustReason(e.target.value)} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" /></div>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowAdjustCreditModal(false)} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-amber-400 text-slate-950 rounded-xl text-xs font-bold shadow">บันทึก</button></div>
+              <div><label className="block text-xs font-bold mb-1">วงเงินใหม่ (บาท)</label><input type="number" required value={newCreditAmount} onChange={(e) => setNewCreditAmount(e.target.value)} className="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm" /></div>
+              <div><label className="block text-xs font-bold mb-1">เหตุผลในการปรับ *</label><textarea required rows="2" value={creditAdjustReason} onChange={(e) => setCreditAdjustReason(e.target.value)} placeholder="ระบุเหตุผลในการอนุมัติวงเงิน..." className="w-full p-3 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowAdjustCreditModal(false)} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-amber-400 text-slate-950 rounded-xl text-xs font-bold shadow">บันทึกลง Google Sheets</button></div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddEqModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-900">{editingEq ? 'แก้ไขเครื่องมือ' : 'เพิ่มเครื่องมือวิทยาศาสตร์ใหม่'}</h3>
+            <form onSubmit={handleSaveEquipment} className="space-y-3">
+              <div><label className="block text-xs font-bold mb-1">ชื่อเครื่องมือ *</label><input type="text" required value={eqForm.name} onChange={(e) => setEqForm({ ...eqForm, name: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="block text-xs font-bold mb-1">รหัสครุภัณฑ์ *</label><input type="text" required value={eqForm.code} onChange={(e) => setEqForm({ ...eqForm, code: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+                <div><label className="block text-xs font-bold mb-1">อัตราบริการ (บาท/ชม.) *</label><input type="number" required value={eqForm.ratePerHour} onChange={(e) => setEqForm({ ...eqForm, ratePerHour: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="block text-xs font-bold mb-1">สถานที่ตั้ง *</label><input type="text" required value={eqForm.location} onChange={(e) => setEqForm({ ...eqForm, location: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+                <div><label className="block text-xs font-bold mb-1">พาธรูปภาพ (เช่น /eq-1.jpg)</label><input type="text" value={eqForm.image} onChange={(e) => setEqForm({ ...eqForm, image: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              </div>
+              <div><label className="block text-xs font-bold mb-1">คำอธิบายรายละเอียด</label><textarea rows="2" value={eqForm.description} onChange={(e) => setEqForm({ ...eqForm, description: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowAddEqModal(false)} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold shadow">บันทึกลง Google Sheets</button></div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddMaintModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4">
+            <h3 className="text-lg font-bold text-slate-900">บันทึกประวัติงานซ่อมบำรุง</h3>
+            <form onSubmit={handleSaveMaintenanceLog} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold mb-1">เลือกเครื่องมือ *</label>
+                <select required value={maintForm.equipmentId} onChange={(e) => setMaintForm({ ...maintForm, equipmentId: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold">
+                  <option value="">-- เลือกเครื่องมือ --</option>
+                  {equipmentList.map(eq => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="block text-xs font-bold mb-1">ประเภทงานซ่อม *</label><input type="text" required value={maintForm.type} onChange={(e) => setMaintForm({ ...maintForm, type: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+                <div><label className="block text-xs font-bold mb-1">ค่าใช้จ่าย (บาท) *</label><input type="number" required value={maintForm.cost} onChange={(e) => setMaintForm({ ...maintForm, cost: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              </div>
+              <div><label className="block text-xs font-bold mb-1">ช่าง / ตัวแทนบริษัท *</label><input type="text" required value={maintForm.technician} onChange={(e) => setMaintForm({ ...maintForm, technician: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div><label className="block text-xs font-bold mb-1">รายละเอียดการซ่อม</label><textarea rows="2" value={maintForm.details} onChange={(e) => setMaintForm({ ...maintForm, details: e.target.value })} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowAddMaintModal(false)} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold shadow">บันทึกลง Google Sheets</button></div>
             </form>
           </div>
         </div>
