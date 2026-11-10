@@ -70,7 +70,14 @@ const formatThaiDate = (dateString) => {
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(amount || 0);
 };
-
+// 🌟 วางแทรกฟังก์ชัน getTodayThaiString ตรงนี้ครับ
+const getTodayThaiString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [usersList, setUsersList] = useState([]);
@@ -159,12 +166,37 @@ export default function App() {
 
   const calculatedBookingDetails = useMemo(() => {
     const eq = equipmentList.find((item) => item.id === bookingForm.equipmentId);
-    if (!eq || !bookingForm.startTime || !bookingForm.endTime) return { hours: 0, totalCost: 0, valid: false };
+    if (!eq || !bookingForm.startTime || !bookingForm.endTime || !bookingForm.date) {
+      return { hours: 0, totalCost: 0, valid: false, isPast: false };
+    }
+
     const start = parseInt(bookingForm.startTime.split(':')[0], 10);
     const end = parseInt(bookingForm.endTime.split(':')[0], 10);
     const hours = end - start;
-    if (hours <= 0) return { hours: 0, totalCost: 0, valid: false };
-    return { hours, totalCost: hours * (Number(eq.ratePerHour) || 0), valid: true };
+
+    // 1. ตรวจสอบว่าเวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น
+    if (hours <= 0) {
+      return { hours: 0, totalCost: 0, valid: false, isPast: false };
+    }
+
+    // 2. ตรวจสอบว่าช่วงเวลาดังกล่าวผ่านไปแล้วหรือยัง
+    const now = new Date();
+    const todayStr = getTodayThaiString();
+    const currentHour = now.getHours();
+
+    let isPast = false;
+    if (bookingForm.date < todayStr) {
+      isPast = true; // วันที่ผ่านมาแล้ว
+    } else if (bookingForm.date === todayStr && start <= currentHour) {
+      isPast = true; // วันนี้ แต่เวลาเริ่มจอง น้อยกว่าหรือเท่ากับ เวลาปัจจุบัน
+    }
+
+    return { 
+      hours, 
+      totalCost: hours * (Number(eq.ratePerHour) || 0), 
+      valid: hours > 0 && !isPast,
+      isPast 
+    };
   }, [bookingForm, equipmentList]);
 
   const equipmentUsageAnalytics = useMemo(() => {
@@ -381,17 +413,47 @@ export default function App() {
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
+
+    // ดักจับกรณีจองเวลาที่ผ่านมาแล้ว
+    if (calculatedBookingDetails.isPast) {
+      showToast('ไม่สามารถจองช่วงเวลาที่ผ่านมาแล้วได้ กรุณาเลือกวัน/เวลาใหม่', 'error');
+      return;
+    }
+
+    if (!calculatedBookingDetails.valid) {
+      showToast('กรุณาเลือกช่วงเวลาให้ถูกต้อง', 'error');
+      return;
+    }
+
     const targetEquipment = equipmentList.find((item) => item.id === bookingForm.equipmentId);
     const newBooking = {
-      id: `B-${Math.floor(1000 + Math.random() * 9000)}`, userId: currentUser.uid, userName: currentUser.displayName,
-      equipmentId: targetEquipment.id, equipmentName: targetEquipment.name, date: bookingForm.date, startTime: bookingForm.startTime,
-      endTime: bookingForm.endTime, durationHours: calculatedBookingDetails.hours, totalCost: calculatedBookingDetails.totalCost,
-      purpose: bookingForm.purpose, status: 'Upcoming', createdAt: new Date().toISOString()
+      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
+      userId: currentUser.uid,
+      userName: currentUser.displayName,
+      equipmentId: targetEquipment.id,
+      equipmentName: targetEquipment.name,
+      date: bookingForm.date,
+      startTime: bookingForm.startTime,
+      endTime: bookingForm.endTime,
+      durationHours: calculatedBookingDetails.hours,
+      totalCost: calculatedBookingDetails.totalCost,
+      purpose: bookingForm.purpose,
+      status: 'Upcoming',
+      createdAt: new Date().toISOString()
     };
+
     try {
-      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'createBooking', data: newBooking }) });
-      setBookings([newBooking, ...bookings]); showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success'); setActiveTab('history');
-    } catch (err) { showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error'); }
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'createBooking', data: newBooking })
+      });
+      setBookings([newBooking, ...bookings]);
+      showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success');
+      setActiveTab('history');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error');
+    }
   };
 
   const handleCancelBooking = async (bookingId) => {
@@ -683,10 +745,19 @@ export default function App() {
                       ))}
                     </select>
                   </div>
+          {/* 📍 ปรับเปลี่ยนบรรทัดนี้: เปลี่ยน min เป็น getTodayThaiString() */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">วันที่ต้องการจอง *</label>
-                    <input type="date" required min={new Date().toISOString().split('T')[0]} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold" />
+                    <input type="date" required min={getTodayThaiString()} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold" />
                   </div>
+
+                  {/* 📍 เพิ่มส่วนนี้: กล่องข้อความเตือนเมื่อเลือกเวลาที่ผ่านไปแล้ว */}
+                  {calculatedBookingDetails.isPast && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2">
+                      ⚠️ ไม่สามารถเลือกช่วงเวลาที่ผ่านมาแล้วได้ กรุณาเปลี่ยนวัน/เวลาเริ่มจอง
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">เวลาเริ่ม *</label>
