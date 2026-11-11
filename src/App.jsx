@@ -776,7 +776,12 @@ const handleSaveAdjustCredit = async (e) => {
                   </h2>
                   <div className="flex items-center gap-2 flex-wrap mt-1">
                     <p className="text-xs text-slate-300">
-                      {currentUser.displayName} <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300 font-bold">{currentUser.userType || 'นิสิต'}</span> • <strong className="text-slate-100">{currentUser.department || 'สังกัด ม.บูรพา'}</strong>
+                      {currentUser.displayName}{' '}
+                      {/* 📍 ปรับเปลี่ยนจุดนี้: ถ้าเป็น Admin และประเภทเดิมคือ 'นิสิต' จะเปลี่ยนเป็น 'ผู้ดูแลระบบ' อัตโนมัติ */}
+                      <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300 font-bold">
+                        {currentUser?.userType === 'นิสิต' && isAdmin ? 'ผู้ดูแลระบบ' : (currentUser?.userType || 'ผู้ดูแลระบบ')}
+                      </span>{' '}
+                      • <strong className="text-slate-100">{currentUser.department || 'สังกัด ม.บูรพา'}</strong>
                     </p>
                     <button onClick={handleOpenEditProfileModal} className="bg-amber-400/20 hover:bg-amber-400 text-amber-300 hover:text-slate-950 border border-amber-400/40 px-2.5 py-0.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all">
                       <Edit className="w-3 h-3" /> แก้ไขประวัติ
@@ -1311,12 +1316,40 @@ const handleSaveAdjustCredit = async (e) => {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border space-y-4">
             <h3 className="text-lg font-bold text-slate-900">แก้ไขข้อมูลประวัติส่วนตัว</h3>
             <form onSubmit={handleSaveProfile} className="space-y-3">
-              <div><label className="block text-xs font-bold mb-1">ชื่อ-นามสกุล *</label><input type="text" required value={profileForm.displayName} onChange={(e) => setProfileForm({ ...profileForm, displayName: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><label className="block text-xs font-bold mb-1">เบอร์โทรศัพท์ *</label><input type="tel" required value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" /></div>
-                <div><label className="block text-xs font-bold mb-1">อีเมล *</label><input type="email" required value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" /></div>
+              <div>
+                <label className="block text-xs font-bold mb-1">ชื่อ-นามสกุล *</label>
+                <input type="text" required value={profileForm.displayName} onChange={(e) => setProfileForm({ ...profileForm, displayName: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
               </div>
-              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowEditProfileModal(false)} className="px-4 py-2 bg-slate-100 text-xs font-bold rounded-xl">ยกเลิก</button><button type="submit" className="px-4 py-2 bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow">บันทึก</button></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold mb-1">เบอร์โทรศัพท์ *</label>
+                  <input type="tel" required value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">อีเมล *</label>
+                  <input type="email" required value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
+                </div>
+              </div>
+
+              {/* 📍 แทรกส่วนเลือกประเภทผู้ใช้งานเพิ่มตรงนี้ครับ */}
+              <div>
+                <label className="block text-xs font-bold mb-1">ประเภทผู้ใช้งาน *</label>
+                <select
+                  value={profileForm.userType}
+                  onChange={(e) => setProfileForm({ ...profileForm, userType: e.target.value })}
+                  className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold text-slate-700"
+                >
+                  <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ (Admin)</option>
+                  <option value="อาจารย์">อาจารย์</option>
+                  <option value="บุคลากร">บุคลากร</option>
+                  <option value="นิสิต">นิสิต</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowEditProfileModal(false)} className="px-4 py-2 bg-slate-100 text-xs font-bold rounded-xl">ยกเลิก</button>
+                <button type="submit" className="px-4 py-2 bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow">บันทึก</button>
+              </div>
             </form>
           </div>
         </div>
