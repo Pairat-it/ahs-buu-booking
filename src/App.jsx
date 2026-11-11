@@ -99,6 +99,9 @@ export default function App() {
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [creditLogs, setCreditLogs] = useState([]);
 
+  // 🌟 วางแทรก State ล็อกปุ่มกดซ้ำตรงนี้ครับ
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+
   const [activeTab, setActiveTab] = useState('catalog');
   const [authMode, setAuthMode] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
@@ -120,7 +123,7 @@ export default function App() {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
 
   const [profileForm, setProfileForm] = useState({ displayName: '', email: '', phone: '', userType: 'นิสิต', department: '', affiliationType: 'ภายในคณะสหเวชศาสตร์' });
-  
+ 
   // ฟอร์มลงทะเบียนพร้อมรายการภาควิชา/สาขาวิชาทั้ง 9 ตัวเลือก
   const [registerForm, setRegisterForm] = useState({ 
     displayName: '', 
@@ -437,13 +440,17 @@ export default function App() {
     } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   };
 
-  const handleCreateBooking = async (e) => {
+ const handleCreateBooking = async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser || isSubmittingBooking) return;
 
-    // ดักจับกรณีจองเวลาที่ผ่านมาแล้ว
     if (calculatedBookingDetails.isPast) {
       showToast('ไม่สามารถจองช่วงเวลาที่ผ่านมาแล้วได้ กรุณาเลือกวัน/เวลาใหม่', 'error');
+      return;
+    }
+
+    if (calculatedBookingDetails.hasOverlap) {
+      showToast('เครื่องมือนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว กรุณาเลือกช่วงเวลาอื่น', 'error');
       return;
     }
 
@@ -451,6 +458,9 @@ export default function App() {
       showToast('กรุณาเลือกช่วงเวลาให้ถูกต้อง', 'error');
       return;
     }
+
+    // ล็อกปุ่มกดทันทีเพื่อป้องกัน Double Click
+    setIsSubmittingBooking(true);
 
     const targetEquipment = equipmentList.find((item) => item.id === bookingForm.equipmentId);
     const newBooking = {
@@ -470,19 +480,27 @@ export default function App() {
     };
 
     try {
-      await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'createBooking', data: newBooking })
       });
-      setBookings([newBooking, ...bookings]);
-      showToast(`จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย`, 'success');
-      setActiveTab('history');
+      const json = await res.json();
+
+      if (json.status === 'success') {
+        setBookings((prev) => [newBooking, ...prev]);
+        showToast('จองคิวสำเร็จ! บันทึกลง Google Sheets เรียบร้อย', 'success');
+        setActiveTab('history');
+      } else {
+        showToast(`เกิดข้อผิดพลาด: ${json.message}`, 'error');
+      }
     } catch (err) {
       showToast('เกิดข้อผิดพลาดในการส่งข้อมูลจองคิว', 'error');
+    } finally {
+      // คืนค่าล็อกเพื่อให้กดใหม่ได้เมื่อทำงานเสร็จ
+      setIsSubmittingBooking(false);
     }
   };
-
   const handleCancelBooking = async (bookingId) => {
     const targetBooking = bookings.find((b) => b.id === bookingId);
     if (!targetBooking) return;
@@ -841,8 +859,13 @@ export default function App() {
                     <span>วงเงินคงเหลือ: <strong className="text-emerald-400">{formatCurrency(remainingCredit - calculatedBookingDetails.totalCost)}</strong></span>
                   </div>
 
-                  <button type="submit" disabled={!calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                    ยืนยันการจองคิว (ซิงค์ Google Sheets)
+                  {/* 📍 ปรับแก้ไขปุ่มกด Step 3 เพิ่ม isSubmittingBooking */}
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingBooking || !calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} 
+                    className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingBooking ? '⏳ กำลังบันทึกข้อมูล...' : 'ยืนยันการจองคิว (ซิงค์ Google Sheets)'}
                   </button>
                 </form>
               </div>
