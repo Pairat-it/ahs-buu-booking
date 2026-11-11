@@ -651,7 +651,7 @@ const handleSaveAdjustCredit = async (e) => {
               <img 
                 src="/Logo.png" 
                 alt="ตราสัญลักษณ์คณะสหเวชศาสตร์" 
-                className="w-20 h-20 object-contain mx-auto mb-3" 
+                className="w-15 h-15 object-contain mx-auto mb-3" 
               />
               <h2 className="text-xl font-bold text-slate-900">{authMode === 'login' ? 'เข้าสู่ระบบใช้งานจริง' : 'ลงทะเบียนใช้งานครั้งแรก'}</h2>
               <p className="text-xs text-slate-500 mt-1">คณะสหเวชศาสตร์ มหาวิทยาลัยบูรพา</p>
