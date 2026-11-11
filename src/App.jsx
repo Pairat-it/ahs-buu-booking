@@ -1316,9 +1316,16 @@ const handleSaveAdjustCredit = async (e) => {
 
       {/* FOOTER */}
       <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 py-6 text-xs mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center space-y-1">
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-1.5">
           <p className="font-medium text-slate-300">© 2026 คณะสหเวชศาสตร์ มหาวิทยาลัยบูรพา (Faculty of Allied Health Sciences, Burapha University)</p>
           <p className="text-slate-500">169 ถนนลงหาดบางแสน ตำบลแสนสุข อำเภอเมือง จังหวัดชลบุรี 20131 | โทรศัพท์: 0-3810-3157</p>
+          
+          {/* 📍 ข้อมูลผู้พัฒนาระบบ */}
+          <p className="text-slate-400 pt-2 border-t border-slate-800/80 mt-2">
+            ผู้พัฒนาระบบ: <span className="text-slate-200 font-semibold">นายไพรัช อิฐรัตน์</span> • 
+            E-mail: <a href="mailto:pairat.it@go.buu.ac.th" className="text-amber-400 hover:underline ml-1">pairat.it@go.buu.ac.th</a> • 
+            โทร: <a href="tel:0619454194" className="text-amber-400 hover:underline ml-1">061-945-4194</a>
+          </p>
         </div>
       </footer>
 
