@@ -271,16 +271,23 @@ export default function App() {
     showToast('ดาวน์โหลดรายชื่อผู้ใช้ CSV เรียบร้อยแล้ว', 'success');
   };
 
-  const handleLoginSubmit = (e) => {
+const handleLoginSubmit = (e) => {
     e.preventDefault();
     const emailInput = loginEmail.trim().toLowerCase();
     const foundUser = usersList.find((u) => u.email.trim().toLowerCase() === emailInput);
     if (foundUser) {
-      if (foundUser.isBanned) { showToast('บัญชีนี้ถูกระงับสิทธิ์การใช้งาน', 'error'); return; }
-      setCurrentUser(foundUser); showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${foundUser.displayName}`, 'success');
+      // 📍 เช็กสถานะการถูกระงับตรงนี้ครับ
+      if (foundUser.status === 'Suspended' || foundUser.isBanned) { 
+        showToast('บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ', 'error'); 
+        return; 
+      }
+      
+      setCurrentUser(foundUser); 
+      showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${foundUser.displayName}`, 'success');
     } else {
       showToast('ไม่พบข้อมูลอีเมลนี้ในระบบ กรุณาลงทะเบียนใช้งานครั้งแรก', 'warning');
-      setAuthMode('register'); setRegisterForm((prev) => ({ ...prev, email: loginEmail }));
+      setAuthMode('register'); 
+      setRegisterForm((prev) => ({ ...prev, email: loginEmail }));
     }
   };
 
@@ -404,8 +411,7 @@ export default function App() {
       showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets', 'error');
     }
   };
-
-  const handleSaveAdjustCredit = async (e) => {
+const handleSaveAdjustCredit = async (e) => {
     e.preventDefault();
     if (!creditAdjustUser) return;
     const parsedCredit = parseFloat(newCreditAmount);
@@ -423,12 +429,35 @@ export default function App() {
     } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกการปรับวงเงิน', 'error'); }
   };
 
+  // 🌟 วางแทรกโค้ดข้อ 2.1 ตรงนี้ครับ
+  const handleToggleUserStatus = async (targetUserId, currentStatus) => {
+    const newStatus = currentStatus === 'Suspended' ? 'Active' : 'Suspended';
+    const actionText = newStatus === 'Suspended' ? 'ระงับการใช้งาน' : 'ปลดการระงับใช้งาน';
+
+    if (!window.confirm(`คุณต้องการ ${actionText} ผู้ใช้งานรายนี้ใช่หรือไม่?`)) return;
+
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'toggleUserStatus', userId: targetUserId, status: newStatus })
+      });
+
+      setUsersList((prev) =>
+        prev.map((u) => (u.uid === targetUserId ? { ...u, status: newStatus } : u))
+      );
+
+      showToast(`${actionText} ผู้ใช้งานเรียบร้อยแล้ว`, 'success');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะผู้ใช้', 'error');
+    }
+  };
+
   const handleOpenEditProfileModal = () => {
     if (!currentUser) return;
     setProfileForm({ displayName: currentUser.displayName || '', email: currentUser.email || '', phone: currentUser.phone || '', userType: currentUser.userType || 'นิสิต', department: currentUser.department || '', affiliationType: currentUser.affiliationType || 'ภายในคณะสหเวชศาสตร์' });
     setShowEditProfileModal(true);
   };
-
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -444,7 +473,13 @@ export default function App() {
     e.preventDefault();
     if (!currentUser || isSubmittingBooking) return;
 
-    if (calculatedBookingDetails.isPast) {
+    // 📍 เช็กสถานะถูกระงับการใช้งานตรงนี้ครับ
+    if (currentUser.status === 'Suspended' || currentUser.isBanned) {
+      showToast('บัญชีของคุณถูกระงับการใช้งาน ไม่สามารถทำการจองคิวได้', 'error');
+      return;
+    }
+    
+     if (calculatedBookingDetails.isPast) {
       showToast('ไม่สามารถจองช่วงเวลาที่ผ่านมาแล้วได้ กรุณาเลือกวัน/เวลาใหม่', 'error');
       return;
     }
@@ -1097,7 +1132,22 @@ export default function App() {
                     <tbody className="divide-y divide-slate-200">
                       {usersList.map((u) => (
                         <tr key={u.uid} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 font-bold text-slate-900">{u.displayName} <div className="text-[10px] text-slate-400 font-normal">{u.studentId}</div></td>
+                          <td className="px-6 py-4 font-bold text-slate-900">
+                            <div className="flex items-center gap-2">
+                              <span>{u.displayName}</span>
+                              {/* 📍 ป้ายแสดงสถานะการใช้งาน */}
+                              {u.status === 'Suspended' ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                  🚫 ถูกระงับ
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                  ✓ ปกติ
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-normal">{u.studentId}</div>
+                          </td>
                           <td className="px-6 py-4">
                             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${u.userType === 'บุคลากร' || u.userType === 'อาจารย์' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}`}>
                               {u.userType || 'นิสิต'}
@@ -1107,9 +1157,24 @@ export default function App() {
                           <td className="px-6 py-4">{u.email}<div className="text-[10px] text-slate-400">{u.phone}</div></td>
                           <td className="px-6 py-4 text-right font-bold text-emerald-700">{formatCurrency(u.creditLimit)}</td>
                           <td className="px-6 py-4 text-center">
-                            <button onClick={() => { setCreditAdjustUser(u); setNewCreditAmount(u.creditLimit); setShowAdjustCreditModal(true); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                              ปรับวงเงิน
-                            </button>
+                            <div className="flex items-center justify-center gap-2">
+                              {/* ปุ่มปรับวงเงิน */}
+                              <button onClick={() => { setCreditAdjustUser(u); setNewCreditAmount(u.creditLimit); setShowAdjustCreditModal(true); }} className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
+                                ปรับวงเงิน
+                              </button>
+
+                              {/* 📍 ปุ่มระงับ / ปลดระงับการใช้งาน */}
+                              <button
+                                onClick={() => handleToggleUserStatus(u.uid, u.status)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                  u.status === 'Suspended'
+                                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border-emerald-200'
+                                    : 'bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-200'
+                                }`}
+                              >
+                                {u.status === 'Suspended' ? 'ปลดระงับ' : 'ระงับการใช้งาน'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1147,7 +1212,6 @@ export default function App() {
           </div>
         )}
       </main>
-
       {/* --- MODALS --- */}
       {showAdminAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
