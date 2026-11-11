@@ -429,30 +429,34 @@ const handleSaveAdjustCredit = async (e) => {
     } catch (err) { showToast('เกิดข้อผิดพลาดในการบันทึกการปรับวงเงิน', 'error'); }
   };
 
-  // 🌟 วางแทรกโค้ดข้อ 2.1 ตรงนี้ครับ
-  const handleToggleUserStatus = async (targetUserId, currentStatus) => {
+ const handleToggleUserStatus = async (targetUserId, currentStatus) => {
     const newStatus = currentStatus === 'Suspended' ? 'Active' : 'Suspended';
     const actionText = newStatus === 'Suspended' ? 'ระงับการใช้งาน' : 'ปลดการระงับใช้งาน';
 
     if (!window.confirm(`คุณต้องการ ${actionText} ผู้ใช้งานรายนี้ใช่หรือไม่?`)) return;
 
     try {
-      await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'toggleUserStatus', userId: targetUserId, status: newStatus })
       });
 
-      setUsersList((prev) =>
-        prev.map((u) => (u.uid === targetUserId ? { ...u, status: newStatus } : u))
-      );
+      const json = await res.json();
 
-      showToast(`${actionText} ผู้ใช้งานเรียบร้อยแล้ว`, 'success');
+      if (json.status === 'success') {
+        // อัปเดต state บนหน้าจอเมื่อ Google Sheets ตอบกลับว่าบันทึกสำเร็จแล้วเท่านั้น
+        setUsersList((prev) =>
+          prev.map((u) => (u.uid === targetUserId ? { ...u, status: newStatus } : u))
+        );
+        showToast(`${actionText} ผู้ใช้งานเรียบร้อยแล้ว`, 'success');
+      } else {
+        showToast(`ไม่สามารถอัปเดตสถานะได้: ${json.message}`, 'error');
+      }
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะผู้ใช้', 'error');
+      showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
     }
   };
-
   const handleOpenEditProfileModal = () => {
     if (!currentUser) return;
     setProfileForm({ displayName: currentUser.displayName || '', email: currentUser.email || '', phone: currentUser.phone || '', userType: currentUser.userType || 'นิสิต', department: currentUser.department || '', affiliationType: currentUser.affiliationType || 'ภายในคณะสหเวชศาสตร์' });
