@@ -78,6 +78,19 @@ const getTodayThaiString = () => {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+// 🌟 วางแทรกโค้ดข้อ 1 ต่อตรงนี้ครับ
+const parseHour = (timeStr) => parseInt(timeStr.split(':')[0], 10);
+
+const isBookingPast = (b) => {
+  const todayStr = getTodayThaiString();
+  const currentHour = new Date().getHours();
+  const bStartHour = parseHour(b.startTime);
+  
+  if (b.date < todayStr) return true;
+  if (b.date === todayStr && bStartHour <= currentHour) return true;
+  return false;
+};
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [usersList, setUsersList] = useState([]);
@@ -167,37 +180,51 @@ export default function App() {
   const calculatedBookingDetails = useMemo(() => {
     const eq = equipmentList.find((item) => item.id === bookingForm.equipmentId);
     if (!eq || !bookingForm.startTime || !bookingForm.endTime || !bookingForm.date) {
-      return { hours: 0, totalCost: 0, valid: false, isPast: false };
+      return { hours: 0, totalCost: 0, valid: false, isPast: false, hasOverlap: false };
     }
 
-    const start = parseInt(bookingForm.startTime.split(':')[0], 10);
-    const end = parseInt(bookingForm.endTime.split(':')[0], 10);
+    const start = parseHour(bookingForm.startTime);
+    const end = parseHour(bookingForm.endTime);
     const hours = end - start;
 
     // 1. ตรวจสอบว่าเวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น
     if (hours <= 0) {
-      return { hours: 0, totalCost: 0, valid: false, isPast: false };
+      return { hours: 0, totalCost: 0, valid: false, isPast: false, hasOverlap: false };
     }
 
-    // 2. ตรวจสอบว่าช่วงเวลาดังกล่าวผ่านไปแล้วหรือยัง
+    // 2. ตรวจสอบเวลาที่ผ่านมาแล้ว
     const now = new Date();
     const todayStr = getTodayThaiString();
     const currentHour = now.getHours();
 
     let isPast = false;
     if (bookingForm.date < todayStr) {
-      isPast = true; // วันที่ผ่านมาแล้ว
+      isPast = true;
     } else if (bookingForm.date === todayStr && start <= currentHour) {
-      isPast = true; // วันนี้ แต่เวลาเริ่มจอง น้อยกว่าหรือเท่ากับ เวลาปัจจุบัน
+      isPast = true;
     }
+
+    // 3. ตรวจสอบการจองซ้ำ/ทับซ้อนช่วงเวลา (Overlap Collision Check)
+    const hasOverlap = bookings.some((b) => {
+      // เช็กเฉพาะเครื่องเดียวกัน วันเดียวกัน และรายการที่ยังไม่ถูกยกเลิก
+      if (b.equipmentId !== bookingForm.equipmentId || b.date !== bookingForm.date || b.status === 'Cancelled') {
+        return false;
+      }
+      const bStart = parseHour(b.startTime);
+      const bEnd = parseHour(b.endTime);
+      
+      // สูตรตรวจสอบเวลาทับซ้อน: (Start1 < End2) AND (End1 > Start2)
+      return start < bEnd && end > bStart;
+    });
 
     return { 
       hours, 
       totalCost: hours * (Number(eq.ratePerHour) || 0), 
-      valid: hours > 0 && !isPast,
-      isPast 
+      valid: hours > 0 && !isPast && !hasOverlap,
+      isPast,
+      hasOverlap 
     };
-  }, [bookingForm, equipmentList]);
+  }, [bookingForm, equipmentList, bookings]);
 
   const equipmentUsageAnalytics = useMemo(() => {
     return equipmentList.map(eq => {
@@ -457,11 +484,31 @@ export default function App() {
   };
 
   const handleCancelBooking = async (bookingId) => {
+    const targetBooking = bookings.find((b) => b.id === bookingId);
+    if (!targetBooking) return;
+
+    // ดักจับ: ไม่ให้ยกเลิกรายการที่ผ่านไปแล้วหรือกำลังใช้งาน
+    if (isBookingPast(targetBooking)) {
+      showToast('ไม่สามารถยกเลิกการจองที่ถึงกำหนดเวลาใช้งานหรือผ่านไปแล้วได้', 'error');
+      return;
+    }
+
+    if (!window.confirm('คุณต้องการยกเลิกการจองนี้ และรับเครดิตคืนใช่หรือไม่?')) return;
+
     try {
-      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'cancelBooking', bookingId: bookingId }) });
-      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b)));
-      showToast('ยกเลิกรายการจองใน Google Sheets เรียบร้อยแล้ว', 'success');
-    } catch (err) { showToast('เกิดข้อผิดพลาดในการยกเลิก', 'error'); }
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'cancelBooking', bookingId })
+      });
+
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b))
+      );
+      showToast('ยกเลิกการจองและคืนเครดิตเรียบร้อย', 'success');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการยกเลิกการจอง', 'error');
+    }
   };
 
   return (
@@ -745,16 +792,23 @@ export default function App() {
                       ))}
                     </select>
                   </div>
-          {/* 📍 ปรับเปลี่ยนบรรทัดนี้: เปลี่ยน min เป็น getTodayThaiString() */}
+
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">วันที่ต้องการจอง *</label>
                     <input type="date" required min={getTodayThaiString()} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-semibold" />
                   </div>
 
-                  {/* 📍 เพิ่มส่วนนี้: กล่องข้อความเตือนเมื่อเลือกเวลาที่ผ่านไปแล้ว */}
+                  {/* เตือน 1: เมื่อเลือกเวลาอดีต */}
                   {calculatedBookingDetails.isPast && (
                     <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2">
                       ⚠️ ไม่สามารถเลือกช่วงเวลาที่ผ่านมาแล้วได้ กรุณาเปลี่ยนวัน/เวลาเริ่มจอง
+                    </div>
+                  )}
+
+                  {/* เตือน 2: เมื่อช่วงเวลานั้นมีคนจองไว้แล้ว */}
+                  {calculatedBookingDetails.hasOverlap && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold flex items-center gap-2">
+                      🚫 เครื่องมือนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว กรุณาเลือกช่วงเวลาอื่น
                     </div>
                   )}
 
@@ -762,25 +816,32 @@ export default function App() {
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">เวลาเริ่ม *</label>
                       <select value={bookingForm.startTime} onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs">
-                        {['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
+                        {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((t) => (
+                          <option key={t} value={t}>{t} น.</option>
+                        ))}
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">เวลาสิ้นสุด *</label>
                       <select value={bookingForm.endTime} onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })} className="w-full p-3 bg-slate-50 border rounded-xl text-xs">
-                        {['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'].map((t) => <option key={t} value={t}>{t} น.</option>)}
+                        {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map((t) => (
+                          <option key={t} value={t}>{t} น.</option>
+                        ))}
                       </select>
                     </div>
                   </div>
+
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">วัตถุประสงค์ในการจอง *</label>
                     <textarea required rows="2" value={bookingForm.purpose} onChange={(e) => setBookingForm({ ...bookingForm, purpose: e.target.value })} placeholder="ระบุโครงการวิจัย..." className="w-full p-3 bg-slate-50 border rounded-xl text-xs" />
                   </div>
+
                   <div className="p-4 bg-slate-900 text-white rounded-2xl flex justify-between items-center text-xs">
                     <span>ค่าบริการรวม: <strong className="text-amber-400 text-base">{formatCurrency(calculatedBookingDetails.totalCost)}</strong></span>
                     <span>วงเงินคงเหลือ: <strong className="text-emerald-400">{formatCurrency(remainingCredit - calculatedBookingDetails.totalCost)}</strong></span>
                   </div>
-                  <button type="submit" disabled={!calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs shadow-md">
+
+                  <button type="submit" disabled={!calculatedBookingDetails.valid || (remainingCredit - calculatedBookingDetails.totalCost < 0)} className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
                     ยืนยันการจองคิว (ซิงค์ Google Sheets)
                   </button>
                 </form>
@@ -813,7 +874,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 4: HISTORY & REFUNDS */}
+           {/* TAB 4: HISTORY & REFUNDS */}
             {activeTab === 'history' && (
               <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
                 <h2 className="text-lg font-bold text-slate-900">ประวัติการจองและการคืนเครดิต ({currentUser.displayName})</h2>
@@ -830,10 +891,18 @@ export default function App() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-sm text-slate-900">{formatCurrency(b.totalCost)}</span>
+                          
+                          {/* 📍 ปรับแก้ไขจุดนี้: เพิ่มการเช็ก isBookingPast(b) */}
                           {b.status === 'Upcoming' ? (
-                            <button onClick={() => handleCancelBooking(b.id)} className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-200">
-                              ยกเลิก & คืนเครดิต
-                            </button>
+                            isBookingPast(b) ? (
+                              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                พ้นกำหนดการยกเลิก
+                              </span>
+                            ) : (
+                              <button onClick={() => handleCancelBooking(b.id)} className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-200">
+                                ยกเลิก & คืนเครดิต
+                              </button>
+                            )
                           ) : (
                             <span className="text-xs text-slate-400 italic">ยกเลิกแล้ว</span>
                           )}
@@ -844,7 +913,7 @@ export default function App() {
                 </div>
               </div>
             )}
-
+            
             {/* TAB 5: DASHBOARD */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
