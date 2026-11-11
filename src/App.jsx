@@ -591,7 +591,7 @@ const handleSaveAdjustCredit = async (e) => {
             <img 
               src="/Logo.png" 
               alt="ตราสัญลักษณ์คณะสหเวชศาสตร์" 
-              className="w-25 h-25 object-contain shrink-0" 
+              className="w-15 h-15 object-contain shrink-0" 
             />
             <div>
               <h1 className="text-xl font-bold">ระบบบริการเครื่องมือวิจัย คณะสหเวชศาสตร์</h1>
