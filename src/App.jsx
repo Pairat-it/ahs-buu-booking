@@ -587,9 +587,12 @@ const handleSaveAdjustCredit = async (e) => {
       <header className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white border-b-4 border-amber-400 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-amber-400 rounded-xl flex items-center justify-center text-slate-950 font-bold">
-              <Microscope className="w-7 h-7" />
-            </div>
+            {/* 📍 เปลี่ยนจากไอคอน Microscope เดิมเป็นตราสัญลักษณ์ Logo.png */}
+            <img 
+              src="/Logo.png" 
+              alt="ตราสัญลักษณ์คณะสหเวชศาสตร์" 
+              className="w-12 h-12 object-contain shrink-0" 
+            />
             <div>
               <h1 className="text-xl font-bold">ระบบบริการเครื่องมือวิจัย คณะสหเวชศาสตร์</h1>
               <p className="text-xs text-slate-300">มหาวิทยาลัยบูรพา (AHS BUU Central Lab)</p>
@@ -644,13 +647,15 @@ const handleSaveAdjustCredit = async (e) => {
         {!currentUser ? (
           <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-amber-400">
-                <Microscope className="w-8 h-8 text-amber-400" />
-              </div>
+              {/* 📍 เปลี่ยนจากไอคอน Microscope เป็นตราสัญลักษณ์ Logo.png */}
+              <img 
+                src="/Logo.png" 
+                alt="ตราสัญลักษณ์คณะสหเวชศาสตร์" 
+                className="w-20 h-20 object-contain mx-auto mb-3" 
+              />
               <h2 className="text-xl font-bold text-slate-900">{authMode === 'login' ? 'เข้าสู่ระบบใช้งานจริง' : 'ลงทะเบียนใช้งานครั้งแรก'}</h2>
               <p className="text-xs text-slate-500 mt-1">คณะสหเวชศาสตร์ มหาวิทยาลัยบูรพา</p>
             </div>
-
             <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
               <button onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-lg ${authMode === 'login' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>เข้าสู่ระบบ</button>
               <button onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-lg ${authMode === 'register' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>ลงทะเบียนใหม่</button>
